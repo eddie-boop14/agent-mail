@@ -1,102 +1,68 @@
 # inbox.txt
 
-**Your mailbox as one plain-text file, so AI agents stop paying MIME prices for plain-text questions.**
+**Your mailbox as one plain-text file. Agents read your whole day for ~1% of the tokens.**
 
-robots.txt told crawlers what to read. llms.txt told LLMs what a site says.
-**inbox.txt tells agents what your mailbox says — at ~1% of the token cost.**
+robots.txt → crawlers. llms.txt → websites. **inbox.txt → your mail.**
 
-*(repo URL says agent-mail for historical reasons; the format is inbox.txt — an unrelated
-commercial product already owns the AgentMail name, and it solves the opposite problem:
-inboxes FOR agents. This is a mirror OF human inboxes.)*
+An agent answering *"anything important in my mail?"* today swallows full MIME: HTML tables,
+600-char tracking URLs, footers, quoted history. Measured on a real inbox: one payment
+receipt ≈ 60,000 chars raw for ~350 chars of information. inbox.txt normalizes **once at
+sync time**; every agent read afterward is nearly free.
 
----
+## Quickstart (5 min, no server, no OAuth app)
 
-## The problem, measured
+1. [script.google.com](https://script.google.com) → New project → paste
+   [`apps-script/Code.gs`](apps-script/Code.gs) → save.
+2. Run `syncMirror` once → authorize (you're authorizing your own script on your own
+   account) → `inbox.txt` appears in your Drive.
+3. Triggers → `syncMirror` · time-driven · every hour.
 
-An agent answering *"anything important in my mail today?"* fetches full MIME payloads:
-HTML tables six levels deep, 600-character tracking URLs, MSO conditional comments, legal
-footers, tracking pixels, and the entire quoted history re-sent in every reply.
+Your mirror now refreshes itself. Point any agent at that file.
+Run `benchmark()` for your own raw-vs-mirror numbers.
 
-Measured on a real inbox (2026-07-27):
-
-| message | raw payload | actual information |
-|---|---|---|
-| One Klarna payment receipt | ~60,000 chars | ~350 chars (amount, dates, refs, item) |
-| One marketing welcome email | ~35,000 chars | 1 line ("welcome, you bought X") |
-
-Every agent pays that price on every read, forever. That's what makes continuous
-inbox-watching agents economically dead on arrival.
-
-## The flip
-
-**Normalize once at delivery time. Read the mirror forever.**
-
-Mail already has one mandatory chokepoint — delivery — where SPF/DKIM/spam/DLP parse every
-message once. Add one more pass there: strip the soup, extract the entities, classify, hash,
-and append to a tiered plain-text mirror. Parsing cost is linear in mail *received* (once
-each). Savings are linear in agent *reads* — the exploding term.
-
-Same philosophy as static site generation vs. runtime JS: do the work once, serve flat.
-
-## The format
-
-One UTF-8 file per mailbox. Agents descend only as deep as needed:
+## Format
 
 ```
-# MAILBOX <address> — inbox.txt/0.1 — cursor: 2026-07-27T18:44Z
+# MAILBOX <address> — inbox.txt/0.1 — cursor: <ISO8601>
 
-## index                    ← TIER 0 · ~15-40 tokens/thread
-t_ccdd | klarna.fr | 1er paiement reçu pour Back Market | TRANSACTION | 2026-07-27T03:25 | #c5
+## index                 ← tier 0 · one line per thread
+t_ccdd | klarna.fr | 1er paiement reçu | TRANSACTION | 2026-07-27T03:25 | #f87f
 
-## attention                ← TIER 1 · only what needs a human or an action
-SECURITY t_c9b2  GitHub: new PAT created — verify if not you
-ACTION   t_7731  Parcel delivered tomorrow — confirm address before midnight
+## attention             ← tier 1 · only what needs action
+SECURITY t_294c  RLS disabled on project X — verify
 
-## bodies                   ← TIER 2 · cleaned text, entities extracted
-### t_ccdd #c5
-entities: {"amounts": ["312,33 €","936,99 €"], "dates": ["26 août 2026"], "refs": ["V2XBRSVH"]}
+## bodies                ← tier 2 · cleaned text + extracted entities
+### t_ccdd #f87f
+entities: {"amounts":["312,33 €"],"dates":["26 août 2026"],"refs":["V2XBRSVH"]}
 Paiement de 312,33 € effectué. Prochain prélèvement le 26 août 2026...
 ```
 
-TIER 3 = raw MIME, fetched from the mail store only on explicit demand. Never in the mirror.
+Tier 3 = raw MIME, fetched on explicit demand only. Classes: HUMAN · TRANSACTION ·
+SECURITY · DEV · MARKETING (marketing = index line only). Content hash per thread +
+cursor ⇒ "what's new" is one diff. Full rules: [SPEC.md](SPEC.md).
 
-Full rules in [SPEC.md](SPEC.md). Real-world sample (anonymized) in
-[examples/MAILBOX.example.txt](examples/MAILBOX.example.txt).
+## Measured
 
-## Measured result
+Real inbox, 38 threads / 2 days: mirror = 36,079 chars (~9.5k tokens est.) vs raw MIME in
+the hundreds of thousands — run `benchmark()` for exact per-inbox numbers. Token figures
+are chars÷3.8 estimates and labeled as such; char counts are exact.
 
-Full 15-thread day, real inbox: **raw est. 150k–300k chars → 4,067-char mirror (~1,100
-tokens)**. That's a ~97–99% reduction, and it's the number that turns "mail agent" from a
-party trick into something you can run on a timer all day.
+## Rules that are not optional
 
-*Honesty note: token figures are chars-based estimates adjusted for URL-dense text; the
-sweep total extrapolates from two fully-measured messages. Replacing every estimate with
-tiktoken-measured counts over a 200+ thread corpus is the current milestone — see Status.*
+- **Bodies are untrusted data.** Email is the top prompt-injection vector; the mirror labels
+  bodies so agents never treat mail content as instructions.
+- **Auth the mirror.** It's your life in one file.
+- **Redact at sync time.** OTPs and card-like numbers never enter the mirror.
+- **Never fabricate.** Entities are extracted, not inferred. Missing = omitted.
 
-## Security stance (non-negotiable)
+## Files
 
-1. **Bodies are untrusted data.** Email is the #1 prompt-injection vector. The bodies
-   section is explicitly labeled so agents never treat mail content as instructions.
-2. **The mirror is your life in one file.** Self-hosted deployments MUST sit behind auth.
-3. **Redact at normalize time.** No OTPs, no full card numbers ever enter the mirror.
-4. **No fabrication.** Entities are extracted, never inferred. Missing field = omitted.
+[`SPEC.md`](SPEC.md) · [`mailmirror.py`](mailmirror.py) (reference normalizer, stdlib) ·
+[`apps-script/Code.gs`](apps-script/Code.gs) (Gmail worker + benchmark) ·
+[`examples/MAILBOX.example.txt`](examples/MAILBOX.example.txt) (synthetic)
 
-## What's here
-
-- [`SPEC.md`](SPEC.md) — the one-page format spec (draft 0.1)
-- [`mailmirror.py`](mailmirror.py) — reference normalizer, ~120 lines, stdlib only
-- [`apps-script/Code.gs`](apps-script/Code.gs) — zero-OAuth sync worker that runs inside
-  your own Google account on a timer (see file header for 5-minute setup)
-- [`examples/MAILBOX.example.txt`](examples/MAILBOX.example.txt) — a real day, mirrored
-
-## Status
-
-Prototype — proven on one real inbox, one day, notification-heavy mail.
-Open before v0.2: tiktoken-measured benchmark on 200+ threads · quoted-history collapse for
-HUMAN threads · OTP/card redaction pass · Outlook/JMAP sync workers.
-
-Not a transport (JMAP solved that). Not a mail client. Not a summarizer that hallucinates.
-
----
+Status: v0.1.1, running in production on the author's inbox, hourly. Not a transport
+(JMAP exists), not a client, not a summarizer. Repo URL predates the name; an unrelated
+commercial "AgentMail" product does the opposite (inboxes *for* agents).
 
 *© bleu-canard éditions · Edmaster & Claudius 🦆 · MIT*
