@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-mailmirror.py — reference normalizer for the AGENT-MAIL mirror format.
+mailmirror.py — reference normalizer for the inbox.txt mirror format.
 bleu-canard éditions · Edmaster & Claudius 🦆 · 2026
 
 Input:  Gmail API message JSON (or any dict with sender/subject/date/plaintextBody)
