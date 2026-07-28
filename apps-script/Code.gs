@@ -39,7 +39,7 @@ var POST_TOKEN    = '';      // bearer token for your endpoint
 var SECURITY_KEYS = ['security','signin','sign-in','login','access','token','connexion','verify'];
 var DEV_KEYS      = ['github.com','gitlab','netlify','vercel','supabase'];
 var TRANSAC_KEYS  = ['noreply','no-reply','notification','receipt','billing','invoice','delivery','order','payment','facture','colis','commande'];
-var MARKET_KEYS   = ['newsletter','promo','hello.','bonjour@','info@members','posts-recap','@e.','substack'];
+var MARKET_KEYS   = ['newsletter','promo','hello.','bonjour@','info@members','posts-recap','@e.','substack','news.','email.voyage','mail.instagram','familysearch','members.'];
 var FOOTER_CUES   = ['se désabonner','unsubscribe','mentions légales','tous droits réservés',
                      'droits sur vos données','vous recevez cet e-mail','numéro de tva',
                      "numéro d'immatriculation",'this message was sent'];
@@ -50,14 +50,15 @@ function classify(sender, subject) {
   var s = (sender + ' ' + subject).toLowerCase();
   if (SECURITY_KEYS.some(function(k){return s.indexOf(k) >= 0})) return 'SECURITY';
   if (DEV_KEYS.some(function(k){return sender.toLowerCase().indexOf(k) >= 0})) return 'DEV';
-  if (TRANSAC_KEYS.some(function(k){return s.indexOf(k) >= 0})) return 'TRANSACTION';
   if (MARKET_KEYS.some(function(k){return sender.toLowerCase().indexOf(k) >= 0})) return 'MARKETING';
+  if (TRANSAC_KEYS.some(function(k){return s.indexOf(k) >= 0})) return 'TRANSACTION';
   return 'HUMAN';
 }
 
 function cleanBody(text) {
   if (!text) return '';
   text = text.replace(/[\u200b\u200c\u200d\ufeff\u034f]|͏/g, '');
+  text = text.replace(/<[^>]{1,300}>/g, ' ').replace(/&#?\w{2,8};/g, ' ');
   // tracking URLs (long) → [link:domain]
   text = text.replace(/\[?\(?\s*https?:\/\/\S{60,}\s*\)?\]?/g, function(m) {
     var d = m.match(/https?:\/\/([^\/\s\]\)]+)/);
@@ -84,7 +85,7 @@ function entities(text) {
   var e = {};
   var am = text.match(/\d[\d\s.,]*\s?€/g);
   var dt = text.match(/\b\d{1,2}\s(?:janv|févr|mars|avril|mai|juin|juil|août|sept|oct|nov|déc)\S*\.?\s?\d{0,4}/gi);
-  var rf = text.match(/\b[A-Z0-9]{6,12}\b/g);
+  var rf = text.match(/\b(?=[A-Z0-9]*\d)[A-Z0-9]{6,12}\b/g);
   if (am) e.amounts = uniq(am).slice(0, 4);
   if (dt) e.dates   = uniq(dt).slice(0, 4);
   if (rf) e.refs    = uniq(rf).slice(0, 3);
@@ -99,14 +100,14 @@ function shortHash(s) {
 
 function syncMirror() {
   var threads = GmailApp.search(SEARCH, 0, MAX_THREADS);
-  var index = [], attention = [], bodies = [];
+  var index = [], attention = [], bodies = [], seen = {};
 
   threads.forEach(function(th) {
     var msgs = th.getMessages();
     var last = msgs[msgs.length - 1];
     var sender  = last.getFrom();
     var domain  = (sender.match(/@([^>\s]+)/) || [,'?'])[1];
-    var subject = (th.getFirstMessageSubject() || '(no subject)').substring(0, 48);
+    var subject = (th.getFirstMessageSubject() || '(no subject)').replace(/\s+/g, ' ').trim().substring(0, 48);
     var kind    = classify(sender, subject);
     var body    = cleanBody(last.getPlainBody());
     var h       = shortHash(body || subject);
@@ -120,11 +121,14 @@ function syncMirror() {
     if (th.isUnread() && kind === 'HUMAN')
       attention.push('REPLY?   ' + tid + '  unread human mail from ' + domain);
 
-    if (kind !== 'MARKETING' && body) {
+    if (kind !== 'MARKETING' && body && !seen[h]) {
+      seen[h] = tid;
       var e = entities(body);
       bodies.push('\n### ' + tid + ' #' + h +
         (Object.keys(e).length ? '\nentities: ' + JSON.stringify(e) : '') +
         '\n' + body.substring(0, BODY_CAP));
+    } else if (seen[h] && seen[h] !== tid) {
+      bodies.push('\n### ' + tid + ' #' + h + '\n[identical to ' + seen[h] + ']');
     }
   });
 
