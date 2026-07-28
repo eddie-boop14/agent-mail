@@ -154,3 +154,23 @@ function syncMirror() {
   }
   Logger.log('wrote ' + FILE_NAME + ' (' + threads.length + ' threads, ' + mirror.length + ' chars)');
 }
+
+/**
+ * benchmark() — run once, read the log, get your headline number.
+ * Sums true raw MIME size (getRawContent) of every message in the last
+ * MAX_THREADS threads and compares against the live mirror file.
+ * Run syncMirror first so the mirror is fresh.
+ */
+function benchmark() {
+  var threads = GmailApp.search(SEARCH, 0, MAX_THREADS);
+  var raw = 0, msgs = 0;
+  threads.forEach(function(th) {
+    th.getMessages().forEach(function(m) { raw += m.getRawContent().length; msgs++; });
+  });
+  var it = DriveApp.getFilesByName(FILE_NAME);
+  var mir = it.hasNext() ? it.next().getBlob().getDataAsString().length : 0;
+  Logger.log('BENCHMARK: ' + threads.length + ' threads / ' + msgs + ' messages | raw MIME: ' +
+    raw + ' chars | mirror: ' + mir + ' chars | reduction: ' +
+    (raw ? (100 - Math.round(100 * mir / raw)) : 0) + '% | est. tokens: ~' +
+    Math.round(raw / 3.8) + ' -> ~' + Math.round(mir / 3.8));
+}
