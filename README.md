@@ -43,9 +43,17 @@ cursor ⇒ "what's new" is one diff. Full rules: [SPEC.md](SPEC.md).
 
 ## Measured
 
-Real inbox, 38 threads / 2 days: mirror = 36,079 chars (~9.5k tokens est.) vs raw MIME in
-the hundreds of thousands — run `benchmark()` for exact per-inbox numbers. Token figures
-are chars÷3.8 estimates and labeled as such; char counts are exact.
+Real inbox, 2 days, 38 threads / 47 messages, via `benchmark()` (`getRawContent()` = true
+RFC-822 MIME):
+
+| | chars (exact) | tokens (est. chars÷3.8) |
+|---|---|---|
+| raw MIME | 2,099,654 | ~552,000 |
+| inbox.txt mirror | 28,755 | ~7,600 |
+| **reduction** | **99%** | **~73×** |
+
+The raw version doesn't even fit a typical context window. The mirror is a side note.
+Run `benchmark()` on your own inbox — one log line.
 
 ## Rules that are not optional
 
