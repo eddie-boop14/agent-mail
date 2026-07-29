@@ -36,6 +36,9 @@ var POST_URL      = '';      // e.g. 'https://xyz.supabase.co/functions/v1/inbox
 var POST_TOKEN    = '';      // bearer token for your endpoint
 var TOKENIZER_URL = '';      // optional: your worker/ deploy, for exact token counts
 var TOKENIZER_TOKEN = '';    // the TOKENIZE_TOKEN secret you set on it
+var TOKENIZER_CHUNK = 200000;// chars per request. Workers Paid: 200000+ is fine.
+                             // Workers Free caps CPU at ~10ms per request — if you see
+                             // "Worker exceeded CPU" or error 1102, drop this to 8000.
 // ═════════════════════════════════════════════════════════════════════════════
 
 var SECURITY_KEYS = ['security','signin','sign-in','login','access','token','connexion','verify'];
@@ -290,7 +293,7 @@ function mirrorText_() {
 
 function tokenizeChunked_(s) {
   if (!TOKENIZER_URL || !TOKENIZER_TOKEN) throw new Error('set TOKENIZER_URL and TOKENIZER_TOKEN (see worker/README.md)');
-  var CH = 380000, total = 0, i = 0;
+  var CH = TOKENIZER_CHUNK || 200000, total = 0, i = 0;
   while (i < s.length) {
     var res = UrlFetchApp.fetch(TOKENIZER_URL, {
       method: 'post', contentType: 'text/plain; charset=utf-8',
@@ -318,7 +321,7 @@ function tokenizeExact(search, cap, label) {
     th.getMessages().forEach(function (m) {
       var c = m.getRawContent();
       rawChars += c.length; msgs++; buf += c;
-      if (buf.length > 300000) { rawTok += tokenizeChunked_(buf); buf = ''; }
+      if (buf.length > (TOKENIZER_CHUNK || 200000)) { rawTok += tokenizeChunked_(buf); buf = ''; }
     });
     walked++;
   });
