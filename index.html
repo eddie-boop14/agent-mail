@@ -107,21 +107,21 @@ footer{margin-top:5em; padding-top:1.4em; border-top:1px solid var(--rule); colo
     <a href="https://github.com/eddie-boop14/inbox-txt/tree/main/worker">tokenizer worker</a>.
     The ratio moves with your mail mix — run it on your own inbox.</p>
 
-    <p>In tokens — what an agent actually pays — the gap is wider still. Raw MIME tokenizes at
-    <b>2.10 chars/token</b> (cl100k, measured on a stratified sample; per-class spread 1.99–2.22)
-    against 3.46 for the mirror's clean text:</p>
+    <p>In tokens — what an agent actually pays — both sides were tokenized in full, no
+    sampling. Raw MIME comes in at <b>2.23 chars/token</b> against the mirror's 3.29, because
+    DKIM signatures and base64 are near-random to a tokenizer:</p>
     <table>
-      <tr><th>window</th><th>raw ≈ tokens</th><th>mirror ≈ tokens</th><th>reduction</th></tr>
-      <tr><td>7 days</td><td>2,037,000</td><td>19,700</td><td>103×</td></tr>
-      <tr><td><b>30 days</b></td><td><b>9,809,000</b></td><td><b>50,100</b></td><td><b>196×</b></td></tr>
+      <tr><th>7 days · 109 messages</th><th>chars</th><th>tokens</th></tr>
+      <tr><td>raw MIME</td><td>4,286,586</td><td>1,919,892</td></tr>
+      <tr><td>inbox.txt mirror</td><td>70,713</td><td>21,481</td></tr>
+      <tr><td><b>reduction</b></td><td>98.35%</td><td><b>98.88% — 89×</b></td></tr>
     </table>
-    <p class="dim">A month of mail is ~9.8 M tokens of raw MIME — about fifty times a large context
-    window. The mirror of that month is ~50 k tokens: one prompt. Because raw MIME tokenizes worse
-    than clean text, the character figures above understate the win. Token counts apply a measured
-    ratio to exact char counts; deploy the included
-    <a href="https://github.com/eddie-boop14/inbox-txt/blob/main/netlify/functions/tokenize.mjs">Netlify function</a>
-    or <a href="https://github.com/eddie-boop14/inbox-txt/tree/main/worker">Cloudflare worker</a>
-    and run <b>tokenizeExact7d()</b> to remove the extrapolation entirely.</p>
+    <p class="dim">Scaled by those measured ratios, a month of mail is ~9.26 M raw tokens
+    against ~52.7 k mirrored — about 175×, or forty-five context windows versus one prompt.
+    Reproduce it with <b>tokenizeExact7d()</b> after deploying the included
+    <a href="https://github.com/eddie-boop14/inbox-txt/blob/main/netlify/functions/tokenize.mjs">tokenizer</a>.
+    A sampled estimate said 103× before the full measurement said 89× — sampling flattered it
+    by 16%, which is why the tool ships with the spec.</p>
 
     <p class="dim">Per class over those 30 days the win is largest where the bytes carry least:
     MARKETING 99.9%, HUMAN 99.6%, TRANSACTION 98.1%, DEV 98.0%, SECURITY 98.0%. HUMAN near the
@@ -149,6 +149,9 @@ t_a004 | shop.example      | Summer sale — 40% off all     | MARKETING   | #4d
 <span class="k">## attention</span>                <span class="c">← tier 1 · only what needs a human</span>
 <span class="r">SECURITY</span> t_a002  [alice/webshop] deploy failed — verify if this was you
 <span class="g">REPLY?</span>   t_a006  unread human mail from bob-partner.example
+
+<span class="k">## quarantine</span>              <span class="c">← spam: index only, bodies never mirrored</span>
+t_8f2a | unknown-sender.example | Votre facture est disponible | SPAM | 2026-07-28T09:14
 
 <span class="k">## bodies</span>                   <span class="c">← tier 2 · cleaned text + extracted entities</span>
 ### t_a003 #3c4d
