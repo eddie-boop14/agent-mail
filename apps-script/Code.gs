@@ -34,6 +34,8 @@ var FILE_NAME     = 'inbox.txt';
 var BODY_CAP      = 1200;    // chars per tier-2 body
 var POST_URL      = '';      // e.g. 'https://xyz.supabase.co/functions/v1/inbox'
 var POST_TOKEN    = '';      // bearer token for your endpoint
+var TOKENIZER_URL = '';      // optional: your worker/ deploy, for exact token counts
+var TOKENIZER_TOKEN = '';    // the TOKENIZE_TOKEN secret you set on it
 // ═════════════════════════════════════════════════════════════════════════════
 
 var SECURITY_KEYS = ['security','signin','sign-in','login','access','token','connexion','verify'];
@@ -250,6 +252,76 @@ function benchmarkRun(search, cap, label) {
   }
   if (partial) out.push('  NOTE: stopped at the time guard — widen in stages or lower the cap.');
 
+  Logger.log(out.join('\n'));
+  return out.join('\n');
+}
+
+
+/**
+ * tokenizeExact — replaces every token estimate with a measured count.
+ *
+ * Needs the tokenizer worker from worker/ deployed, and TOKENIZER_URL +
+ * TOKENIZER_TOKEN filled in above. Then pick tokenizeExact7d() and Run.
+ *
+ * It tokenizes the live mirror exactly, streams every raw MIME message through
+ * the worker in chunks, and logs both sides with no extrapolation anywhere.
+ */
+function tokenizeExact7d()  { return tokenizeExact('newer_than:7d -in:trash -in:spam', 150, '7 days'); }
+function tokenizeExact30d() { return tokenizeExact('newer_than:30d -in:trash -in:spam', 400, '30 days'); }
+function tokenizeMirrorOnly() {
+  var txt = mirrorText_();
+  Logger.log('MIRROR EXACT: ' + txt.length + ' chars → ' + tokenizeChunked_(txt) + ' tokens (cl100k)');
+}
+
+function mirrorText_() {
+  var it = DriveApp.getFilesByName(FILE_NAME);
+  if (!it.hasNext()) throw new Error('no ' + FILE_NAME + ' in Drive — run syncMirror first');
+  return it.next().getBlob().getDataAsString();
+}
+
+function tokenizeChunked_(s) {
+  if (!TOKENIZER_URL || !TOKENIZER_TOKEN) throw new Error('set TOKENIZER_URL and TOKENIZER_TOKEN (see worker/README.md)');
+  var CH = 380000, total = 0, i = 0;
+  while (i < s.length) {
+    var res = UrlFetchApp.fetch(TOKENIZER_URL, {
+      method: 'post', contentType: 'text/plain; charset=utf-8',
+      payload: s.substring(i, i + CH),
+      headers: { Authorization: 'Bearer ' + TOKENIZER_TOKEN },
+      muteHttpExceptions: true
+    });
+    if (res.getResponseCode() !== 200) {
+      throw new Error('tokenizer ' + res.getResponseCode() + ': ' + res.getContentText().substring(0, 160));
+    }
+    total += JSON.parse(res.getContentText()).cl100k;
+    i += CH;
+  }
+  return total;
+}
+
+function tokenizeExact(search, cap, label) {
+  var t0 = Date.now(), GUARD = 250000;               // 4m10s — leaves room to finish
+  var mir = mirrorText_(), mirTok = tokenizeChunked_(mir);
+
+  var threads = GmailApp.search(search, 0, cap);
+  var buf = '', rawChars = 0, rawTok = 0, msgs = 0, walked = 0, partial = false;
+  threads.forEach(function (th) {
+    if (Date.now() - t0 > GUARD) { partial = true; return; }
+    th.getMessages().forEach(function (m) {
+      var c = m.getRawContent();
+      rawChars += c.length; msgs++; buf += c;
+      if (buf.length > 300000) { rawTok += tokenizeChunked_(buf); buf = ''; }
+    });
+    walked++;
+  });
+  if (buf) rawTok += tokenizeChunked_(buf);
+
+  var out = ['TOKENS EXACT ' + (partial ? '(PARTIAL) ' : '') + label + ': ' + walked + '/' + threads.length +
+             ' threads · ' + msgs + ' messages',
+             '  raw MIME : ' + rawChars + ' chars → ' + rawTok + ' tokens  (' + (rawTok ? (rawChars / rawTok).toFixed(2) : '—') + ' chars/token)',
+             '  mirror   : ' + mir.length + ' chars → ' + mirTok + ' tokens  (' + (mirTok ? (mir.length / mirTok).toFixed(2) : '—') + ' chars/token)',
+             '  reduction: ' + (rawTok ? (100 - 100 * mirTok / rawTok).toFixed(2) + '% · ' + (rawTok / mirTok).toFixed(0) + '× fewer tokens' : '—'),
+             '  tokenizer: cl100k via ' + TOKENIZER_URL];
+  if (partial) out.push('  NOTE: time guard hit — numbers cover the threads walked, not the window.');
   Logger.log(out.join('\n'));
   return out.join('\n');
 }
