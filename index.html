@@ -91,13 +91,14 @@ footer{margin-top:5em; padding-top:1.4em; border-top:1px solid var(--rule); colo
     Measured on a real inbox — one payment receipt is ~60,000 characters of payload carrying
     ~350 characters of information. Every agent pays that on every read, forever.</p>
     <table>
-      <tr><th>real inbox, 2 days, 47 messages</th><th>chars (exact)</th><th>tokens (est.)</th></tr>
-      <tr><td>raw MIME</td><td>2,099,654</td><td>~552,000</td></tr>
-      <tr><td>inbox.txt mirror</td><td>28,755</td><td>~7,600</td></tr>
-      <tr><td><b>reduction</b></td><td><b>99%</b></td><td><b>~73×</b></td></tr>
+      <tr><th>real inbox, 2 days, 47 messages</th><th>chars (exact)</th><th>tokens (measured)</th></tr>
+      <tr><td>raw MIME</td><td>2,099,654</td><td>≈607,000</td></tr>
+      <tr><td>inbox.txt mirror</td><td>28,755</td><td>9,051</td></tr>
+      <tr><td><b>reduction</b></td><td><b>99%</b></td><td><b>~67×</b></td></tr>
     </table>
     <p class="dim">The raw version doesn’t fit a typical context window. The mirror is a side note —
-    cheap enough that an agent can watch your inbox all day.</p>
+    cheap enough that an agent can watch your inbox all day. Mirror tokens measured with
+    cl100k on a live snapshot (3.46 chars/token); raw tokens implied from that ratio.</p>
   </section>
 
   <section>
