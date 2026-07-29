@@ -65,6 +65,7 @@ def clean_body(text: str) -> str:
 # Secrets arrive by mail every day: reset codes, API keys, tokens. They must
 # never enter a mirror that an agent will read. Redact at normalize time.
 KEY_RE    = re.compile(r'\b(?:github_pat_|ghp_|gho_|ghs_|glpat-|xkeysib-|sk-[A-Za-z0-9]|AIza|xox[baprs]-|AKIA|eyJ[A-Za-z0-9_-]{10})[A-Za-z0-9_\-.]{8,}')
+HEXPAIR_RE = re.compile(r'\b[A-Fa-f0-9]{16,}(?:-[A-Fa-f0-9]{16,})+')
 HEXSEC_RE = re.compile(r'\b[A-Fa-f0-9]{48,}\b')          # 48+ keeps 40-char git SHAs readable
 B64SEC_RE = re.compile(r'\b[A-Za-z0-9+/]{60,}={0,2}\b')
 OTP_RE    = re.compile(r'\b\d{6}\b(?![\s]*\u20ac)')
@@ -72,6 +73,7 @@ CARD_RE   = re.compile(r'\b(?:\d[ -]?){13,16}\b')
 
 def redact(text: str) -> str:
     text = KEY_RE.sub('[key-redacted]', text)
+    text = HEXPAIR_RE.sub('[secret-redacted]', text)
     text = HEXSEC_RE.sub('[secret-redacted]', text)
     text = B64SEC_RE.sub('[secret-redacted]', text)
     text = OTP_RE.sub('[code-redacted]', text)
