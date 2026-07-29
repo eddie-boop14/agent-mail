@@ -83,6 +83,28 @@ base64-encoded photo is pure bulk that never reaches the mirror.
 Method: `benchmark()` sums `getRawContent().length` per message against the live mirror.
 Exact token counts come from the `worker/` tokenizer (cl100k) via `tokenizeExact7d()`.
 
+
+### In tokens
+
+Characters are the exact, reproducible unit. Tokens are what an agent actually pays, so they
+were measured too: **raw MIME tokenizes at 2.10 chars/token** (cl100k, measured on a
+19,899-char stratified sample — one message per class; per-class spread is narrow, 1.99–2.22).
+The mirror, being clean text, runs 3.46.
+
+| window | raw ≈ tokens | mirror ≈ tokens | reduction |
+|---|---|---|---|
+| 7 days | 2,037,000 | 19,700 | 99.0% · 103× |
+| **30 days** | **9,809,000** | **50,100** | **99.5% · 196×** |
+
+A month of mail is roughly **9.8 million tokens** of raw MIME — about fifty times a large
+context window. The mirror of that month is ~50,000 tokens, which fits in one prompt.
+Because raw MIME tokenizes worse than clean text, the character-based figures above
+*understate* the win.
+
+These token numbers apply a measured ratio to exact character counts. To remove the
+extrapolation entirely, deploy [`worker/`](worker/) and run `tokenizeExact7d()` — it streams
+the whole corpus through a real tokenizer and reports both sides exactly.
+
 ## Non-goals
 Not a transport (JMAP solved that). Not a mail client. Not a summarizer that hallucinates —
 tier 2 is *cleaned text*, not paraphrase; the `attention` section is the only interpretive
