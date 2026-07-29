@@ -48,6 +48,7 @@ var CARD_RE       = /\b(?:\d[ -]?){13,16}\b/g;        // long digit runs → red
 // v0.2.1 — long secrets. Password-reset codes, API keys and tokens arrive by mail
 // constantly and must never enter a mirror an agent will read out loud.
 var KEY_RE        = /\b(?:github_pat_|ghp_|gho_|ghs_|glpat-|xkeysib-|sk-[A-Za-z0-9]|AIza|xox[baprs]-|AKIA|eyJ[A-Za-z0-9_-]{10})[A-Za-z0-9_\-\.]{8,}/g;
+var HEXPAIR_RE    = /\b[A-Fa-f0-9]{16,}(?:-[A-Fa-f0-9]{16,})+/g; // hyphen-joined hex (split reset codes)
 var HEXSEC_RE     = /\b[A-Fa-f0-9]{48,}\b/g;          // 48+ hex: reset codes (40 keeps git SHAs readable)
 var B64SEC_RE     = /\b[A-Za-z0-9+\/]{60,}={0,2}\b/g; // long base64 blobs
 
@@ -83,6 +84,7 @@ function cleanBody(text) {
   if (cut > 0) text = text.substring(0, cut);
   // redaction — OTPs & card-like runs never enter the mirror
   text = text.replace(KEY_RE, '[key-redacted]')
+             .replace(HEXPAIR_RE, '[secret-redacted]')
              .replace(HEXSEC_RE, '[secret-redacted]')
              .replace(B64SEC_RE, '[secret-redacted]')
              .replace(OTP_RE, '[code-redacted]')
