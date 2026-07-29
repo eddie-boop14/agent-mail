@@ -114,6 +114,12 @@ Parcel will be delivered Wednesday between 9am and noon. [code-redacted]</pre>
   millions of tokens raw and unreadable by any model; the mirror of that same month is 173 KB
   and fits in one prompt with room left over.</p>
 
+  <p>Characters were only half the story. I measured how raw MIME actually tokenizes — 2.10
+  characters per token, against 3.46 for the mirror's clean text, because DKIM signatures and
+  base64 are near-random to a tokenizer. In the unit an agent actually pays in, a month of my
+  mail is roughly <b>9.8 million tokens</b>: about fifty times a large context window. The
+  mirror of that month is about fifty thousand. Roughly 196× fewer.</p>
+
   <p>The per-class breakdown corrected something I believed. I expected human mail to show the
   worst ratio, on the theory that a person's words are mostly information. Over thirty days
   it was near the best — 99.6% — because human threads are where the attachments live, and a
