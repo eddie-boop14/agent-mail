@@ -57,18 +57,31 @@ Gmail/JMAP/IMAP, normalizes, writes the mirror. Agents read one file.
 
 | | chars (exact) | tokens (est. chars÷3.8) |
 |---|---|---|
-| run | raw MIME (chars) | mirror (chars) | reduction |
-|---|---|---|---|
-| 28 Jul · 38 threads / 47 msgs | 2,099,654 | 28,755 | 98.6% · ~67× |
-| 29 Jul · 39 threads / 52 msgs | 1,852,637 | 30,908 | 98.3% · ~60× |
+| window | threads / msgs | raw MIME (chars) | mirror (chars) | reduction |
+|---|---|---|---|---|
+| 2 days | 39 / 52 | 1,852,637 | 30,908 | 98.3% · 60× |
+| 7 days | 93 / 109 | 4,286,586 | 68,125 | 98.4% · 63× |
+| **30 days** | **239 / 263** | **20,642,353** | **173,437** | **99.2% · 119×** |
 
-Same inbox, two days, shipped code. Char counts exact from `benchmark()`; the mirror
-tokenizes at 3.46 chars/token measured (cl100k) — ~8,300–9,000 tokens for a whole mailbox
-against roughly half a million for the raw version. **The ratio moves with your mail mix.
-Run `benchmark()` for yours.**
+A month of mail is 20.6 M characters of raw MIME — a few million tokens, unreadable by any
+model. The mirror of that month is 173 KB: it fits in one prompt with room left over.
+Char counts are exact from `benchmark()`. Run it on your own inbox.
 
-The raw corpus exceeds most models' context windows — the mirror is what makes
-continuous inbox-watching agents economically possible.
+**By class over 30 days** — the win is largest where the bytes carry least:
+
+| class | threads | raw | mirror | reduction |
+|---|---|---|---|---|
+| HUMAN | 34 | 9,755,024 | 36,013 | 99.6% |
+| MARKETING | 53 | 4,146,148 | 5,965 | 99.9% |
+| TRANSACTION | 64 | 3,751,004 | 70,744 | 98.1% |
+| DEV | 72 | 2,369,689 | 48,013 | 98.0% |
+| SECURITY | 16 | 620,488 | 12,702 | 98.0% |
+
+HUMAN topping the table was a surprise — human threads carry the attachments, and a
+base64-encoded photo is pure bulk that never reaches the mirror.
+
+Method: `benchmark()` sums `getRawContent().length` per message against the live mirror.
+Exact token counts come from the `worker/` tokenizer (cl100k) via `tokenizeExact7d()`.
 
 ## Non-goals
 Not a transport (JMAP solved that). Not a mail client. Not a summarizer that hallucinates —
