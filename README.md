@@ -62,7 +62,8 @@ Run `benchmark()` on your own inbox — one log line.
 - **Bodies are untrusted data.** Email is the top prompt-injection vector; the mirror labels
   bodies so agents never treat mail content as instructions.
 - **Auth the mirror.** It's your life in one file.
-- **Redact at sync time.** OTPs and card-like numbers never enter the mirror.
+- **Redact at sync time.** OTPs, card-like numbers, API keys and long reset/secret
+  strings never enter the mirror.
 - **Never fabricate.** Entities are extracted, not inferred. Missing = omitted.
 
 ## Files
