@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0f1210">
+<title>My inbox doesn't fit in a context window — inbox.txt</title>
+<meta name="description" content="Two days of my mailbox is 2,099,654 characters of raw MIME. Roughly 607,000 tokens. Here's the flip that makes it 9,051 — and why it belongs at delivery time, not read time.">
+<link rel="canonical" href="https://inboxtxt.dev/why.html">
+<meta property="og:title" content="My inbox doesn't fit in a context window">
+<meta property="og:description" content="2,099,654 characters of raw MIME → a 9,051-token plain-text mirror. The proposal behind inbox.txt.">
+<meta property="og:url" content="https://inboxtxt.dev/why.html">
+<meta property="og:type" content="article">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>📬</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,600;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0f1210; --paper:#d6d3c8; --dim:#78766b; --faint:#3a3d38; --mark:#ffd23f; --rule:#242721}
+*{box-sizing:border-box; margin:0}
+body{background:var(--ink); color:var(--paper);
+  font-family:'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size:15px; line-height:1.8; padding:clamp(20px,5vw,64px) clamp(16px,6vw,80px)}
+main{max-width:68ch; margin:0 auto}
+a{color:var(--paper); text-decoration:underline; text-decoration-color:var(--mark); text-underline-offset:3px}
+a:hover{color:var(--mark)}
+.up{color:var(--dim); font-weight:300; margin-bottom:2.4em; display:block}
+h1{font-size:clamp(22px,4vw,34px); font-weight:800; line-height:1.25; letter-spacing:-.01em; margin-bottom:.5em}
+.sub{color:var(--dim); margin-bottom:2.6em}
+h2{font-size:15px; color:var(--mark); font-weight:600; margin:2.8em 0 1em}
+h2::before{content:"## "; color:var(--faint); font-weight:400}
+p{margin:1.1em 0}
+b{font-weight:600}
+.big{font-size:clamp(17px,2.6vw,21px); font-weight:800; line-height:1.45; margin:1.4em 0}
+.big em{font-style:normal; background:var(--mark); color:var(--ink); padding:0 .25ch}
+pre{background:#131613; border:1px solid var(--rule); border-radius:4px; padding:1em 1.2em;
+  overflow-x:auto; font-size:13px; line-height:1.65; margin:1.4em 0; font-family:inherit}
+pre .c{color:var(--dim)} pre .k{color:var(--mark)}
+ul{list-style:none; padding:0; margin:1.2em 0}
+ul li{margin:.9em 0; padding-left:2.4ch; text-indent:-2.4ch}
+ul li::before{content:"— "; color:var(--faint)}
+.btn{display:inline-block; background:var(--mark); color:var(--ink); font-weight:800;
+  padding:.55em 1.2em; border-radius:4px; text-decoration:none; margin:1.6em 1.2ch 0 0}
+.btn.ghost{background:transparent; color:var(--paper); border:1px solid var(--faint)}
+.btn:hover{filter:brightness(1.08)} .btn.ghost:hover{border-color:var(--mark); color:var(--mark)}
+footer{margin-top:4.5em; padding-top:1.4em; border-top:1px solid var(--rule); color:var(--dim); font-size:13px; font-weight:300}
+</style>
+</head>
+<body>
+<main>
+  <a class="up" href="/">← inbox.txt</a>
+
+  <h1>My inbox doesn't fit in a context window</h1>
+  <p class="sub">2,099,654 characters of raw MIME, and almost none of it is information.</p>
+
+  <p>I run two lakeside restaurants and build web products from a phone. Both facts matter,
+  because they mean I ask an AI agent things like <i>“anything important in my mail?”</i>
+  while walking between a kitchen and a terrace.</p>
+
+  <p>For months the answer was slow, expensive, or wrong. I assumed that was the model's
+  fault. It wasn't. So I measured.</p>
+
+  <p>Two days of my mailbox — 38 threads, 47 messages — is <b>2,099,654 characters of raw
+  MIME</b>. Roughly 607,000 tokens. My inbox does not fit in a context window. Not “is
+  expensive to read.” Does not fit.</p>
+
+  <p>And almost none of it is information. One payment receipt: 60,000 characters of nested
+  HTML tables, tracking URLs 600 characters long, conditional comments for a mail client from
+  2007, legal footers, and the entire quoted history repeated in every reply — carrying maybe
+  350 characters that a human would call “the email.” We are asking language models to drink
+  an ocean to find a spoonful.</p>
+
+  <h2>the flip</h2>
+
+  <p>Most attempts to fix this work at read time: smarter retrieval, better summarization,
+  bigger context windows. All of them pay the parsing cost again on every read, by every
+  agent, forever.</p>
+
+  <p>But mail has a chokepoint nobody uses for this: <b>delivery</b>. Every message passes
+  through an MTA exactly once, where spam filtering and DKIM already parse it. Add one more
+  pass there. Strip the soup, extract the entities, classify the thread, hash it, append it
+  to a plain-text file.</p>
+
+  <p class="big">Parsing cost becomes linear in mail <em>received</em> — once each. Savings
+  are linear in agent <em>reads</em> — the term that's exploding.</p>
+
+  <p>That file is inbox.txt.</p>
+
+  <h2>what it looks like</h2>
+
+<pre><span class="k">## index</span>        <span class="c">← tier 0 · one line per thread</span>
+t_a001 | acme-bank.example | Virement de 250,00 € confirmé | TRANSACTION | #1a2b
+
+<span class="k">## attention</span>    <span class="c">← tier 1 · only what needs a human</span>
+SECURITY t_a002  deploy failed — verify if this was you
+
+<span class="k">## bodies</span>       <span class="c">← tier 2 · cleaned text + extracted entities</span>
+### t_a003 #3c4d
+entities: {"dates":["29 juillet"],"refs":["AB123456789FR"]}
+Votre colis sera livré mercredi entre 9h et 12h. [code-redacted]</pre>
+
+  <p>Tier 3 is raw MIME, fetched on explicit demand, never in the mirror. Content hashes plus
+  a cursor make “what's new” a one-line diff.</p>
+
+  <h2>the number</h2>
+
+  <p>My mirror of those same two days: <b>28,755 characters — 9,051 tokens</b>, measured with
+  a real tokenizer, not estimated.</p>
+
+  <p>That's about 67× fewer tokens. The raw version doesn't fit; the mirror is a footnote.</p>
+
+  <p>Which makes it a capability, not a saving. An agent watching my inbox hourly at raw
+  prices is fantasy. At mirror prices it's a cron job — and on the first day mine ran, it
+  found a database table I'd left publicly writable and a subscription quietly billing me
+  every month.</p>
+
+  <h2>four rules that aren't optional</h2>
+  <ul>
+    <li><b>Bodies are untrusted data.</b> Email is the number-one prompt-injection vector.
+    The mirror labels bodies so an agent never mistakes mail content for instructions.</li>
+    <li><b>Auth the mirror.</b> It's your life in one file.</li>
+    <li><b>Redact at sync time.</b> OTPs, card numbers, API keys and reset codes never enter it.</li>
+    <li><b>Never fabricate.</b> Entities are extracted, not inferred. Missing beats wrong.</li>
+  </ul>
+
+  <h2>what this is not</h2>
+
+  <p>Not a transport — JMAP solved that years ago and almost nobody adopted it. Not a mail
+  client. Not a summarizer: tier 2 is cleaned text, not paraphrase, because a summary of your
+  mail is a new thing that can be wrong.</p>
+
+  <p>It's a convention. robots.txt told crawlers what to read. llms.txt told models what a
+  site says. inbox.txt says: here is this mailbox, already in the shape a model can read.</p>
+
+  <h2>it's a draft</h2>
+
+  <p>One inbox, Gmail-first, honest about it. What exists today: a five-minute Apps Script
+  worker that runs inside your own Google account, a reference normalizer, an MCP server so
+  any agent can plug in, and a benchmark you can run on your own mail in one command.</p>
+
+  <p>I'd rather publish a draft that works than a standard nobody uses. The open questions are
+  on the front page — where a hosted mirror should live, whether tier 1 should be
+  machine-parseable, how threads should expire. Tell me I'm wrong.</p>
+
+  <p><a class="btn" href="/">See the format</a>
+     <a class="btn ghost" href="https://github.com/eddie-boop14/inbox-txt">Repo + spec</a></p>
+
+  <footer>
+    <p>Eddie Raset — bleu-canard éditions · MIT ·
+    <a href="https://inboxtxt.dev">inboxtxt.dev</a></p>
+  </footer>
+</main>
+</body>
+</html>
