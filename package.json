@@ -1,0 +1,8 @@
+{
+  "name": "inbox-txt",
+  "private": true,
+  "description": "inbox.txt — mailbox mirror spec, reference tools and tokenizer function",
+  "dependencies": {
+    "gpt-tokenizer": "^2.9.0"
+  }
+}
