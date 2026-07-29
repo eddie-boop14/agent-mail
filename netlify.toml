@@ -1,0 +1,17 @@
+# inbox.txt — the site is the repo root: static files, no build step.
+# package.json exists only so the tokenizer function gets its dependency installed.
+
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+[[headers]]
+  for = "/example.txt"
+  [headers.values]
+    Content-Type = "text/plain; charset=utf-8"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
