@@ -222,9 +222,16 @@ function benchmarkRun(search, cap, label) {
     var c = byClass[kind] || (byClass[kind] = { n: 0, raw: 0, mir: 0 });
     c.n++; c.raw += r; c.mir += cost;
 
-    if (!seenClass[kind] && r > 800) {
-      seenClass[kind] = true;
-      sample.push('=== ' + kind + ' (' + domain + ') ===\n' + last.getRawContent().substring(0, 4000));
+    // Representative sample: WHOLE messages, not the first 4 KB. Truncating grabs only
+    // SMTP headers and DKIM blocks, which tokenize near 1.9 chars/token against ~2.8 for
+    // body text — extrapolating from that would overstate raw tokens and flatter the
+    // benchmark. A complete message keeps the real header:body:attachment mix.
+    if (!seenClass[kind]) {
+      var full = last.getRawContent();
+      if (full.length > 4000 && full.length < 120000) {
+        seenClass[kind] = true;
+        sample.push('=== ' + kind + ' (' + domain + ') · complete message, ' + full.length + ' chars ===\n' + full);
+      }
     }
   });
 
@@ -244,7 +251,9 @@ function benchmarkRun(search, cap, label) {
   if (sample.length) {
     var txt = '# raw MIME sample for tokenizer measurement — ' + new Date().toISOString() + '\n' +
               '# full run: ' + raw + ' raw chars / ' + mir + ' mirror chars over ' + walked + ' threads\n' +
-              '# one message per class, first 4000 chars each. Tokenize this to get raw chars/token.\n\n' +
+              '# one COMPLETE message per class (4 KB-120 KB). Whole messages keep the real\n' +
+              '# header:body:attachment mix — truncated samples are header-heavy and tokenize\n' +
+              '# ~1.9 chars/token vs ~2.8 for body text, which would flatter the benchmark.\n\n' +
               sample.join('\n\n');
     var it = DriveApp.getFilesByName('benchmark-sample.txt');
     if (it.hasNext()) it.next().setContent(txt); else DriveApp.createFile('benchmark-sample.txt', txt, 'text/plain');
