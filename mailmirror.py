@@ -89,7 +89,9 @@ DATE = re.compile(r'\b\d{1,2}\s' + _M + r'[a-zéû]*\.?\s?\d{0,4}|\b' + _M + r'[
 def entities(text: str) -> dict:
     e = {}
     if m := AMOUNT.findall(text):  e["amounts"] = sorted(set(m))[:4]
-    if m := DATE.findall(text):    e["dates"]   = sorted(set(m))[:4]
+    if m := DATE.findall(text):
+        m = [a for a in set(m) if not any(b != a and a in b for b in m)]
+        e["dates"] = sorted(m)[:4]
     if m := REF.findall(text):     e["refs"]    = sorted(set(m))[:3]
     return e
 
