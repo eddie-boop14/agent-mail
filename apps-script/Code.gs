@@ -100,6 +100,8 @@ function entities(text) {
   var MONTH = '(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|janv|f\u00e9vr|avr|mai|juil|ao\u00fbt|d\u00e9c)';
   var dt = (text.match(new RegExp('\\b\\d{1,2}\\s' + MONTH + '[a-z\u00e9\u00fb]*\\.?\\s?\\d{0,4}', 'gi')) || [])
     .concat(text.match(new RegExp('\\b' + MONTH + '[a-z]*\\.?\\s\\d{1,2},?\\s?\\d{0,4}', 'gi')) || []);
+  // drop partials contained in a longer match ("July 2026" inside "28 July 2026")
+  dt = dt.filter(function(a){ return !dt.some(function(b){ return b !== a && b.indexOf(a) >= 0; }); });
   if (!dt.length) dt = null;
   var rf = text.match(/\b(?=[A-Z0-9]*\d)[A-Z0-9]{6,12}\b/g);
   if (am) e.amounts = uniq(am).slice(0, 4);
