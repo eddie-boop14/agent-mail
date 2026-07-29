@@ -34,11 +34,13 @@ var FILE_NAME     = 'inbox.txt';
 var BODY_CAP      = 1200;    // chars per tier-2 body
 var POST_URL      = '';      // e.g. 'https://xyz.supabase.co/functions/v1/inbox'
 var POST_TOKEN    = '';      // bearer token for your endpoint
-var TOKENIZER_URL = '';      // optional: your worker/ deploy, for exact token counts
+var TOKENIZER_URL = '';      // exact token counts. Easiest: the Netlify function that ships
+                             // with this repo — 'https://<your-site>/.netlify/functions/tokenize'
+                             // (or your Cloudflare worker/ deploy, see worker/README.md)
 var TOKENIZER_TOKEN = '';    // the TOKENIZE_TOKEN secret you set on it
-var TOKENIZER_CHUNK = 200000;// chars per request. Workers Paid: 200000+ is fine.
-                             // Workers Free caps CPU at ~10ms per request — if you see
-                             // "Worker exceeded CPU" or error 1102, drop this to 8000.
+var TOKENIZER_CHUNK = 200000;// chars per request. Netlify functions (10s budget): fine.
+                             // Cloudflare Workers Free caps CPU at ~10ms — if you use that
+                             // and see error 1102, drop this to 8000.
 // ═════════════════════════════════════════════════════════════════════════════
 
 var SECURITY_KEYS = ['security','signin','sign-in','login','access','token','connexion','verify'];
