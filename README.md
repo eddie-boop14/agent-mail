@@ -17,8 +17,12 @@ sync time**; every agent read afterward is nearly free.
    account) → `inbox.txt` appears in your Drive.
 3. Triggers → `syncMirror` · time-driven · every hour.
 
-Your mirror now refreshes itself. Point any agent at that file.
-Run `benchmark()` for your own raw-vs-mirror numbers.
+Your mirror now refreshes itself. Run `benchmark()` for your own raw-vs-mirror numbers.
+
+**Plug it into an agent** — [`mcp/server.py`](mcp/server.py) is an MCP server:
+`pip install mcp`, point `INBOX_SOURCE` at your inbox.txt (local path or https URL),
+and any MCP-capable agent gets three read-only tools — `inbox_overview` (whole mailbox,
+a few hundred tokens), `inbox_body`, `inbox_since`. All output is wrapped as untrusted data.
 
 ## Format
 
@@ -69,12 +73,27 @@ Run `benchmark()` on your own inbox — one log line.
 ## Files
 
 [`SPEC.md`](SPEC.md) · [`mailmirror.py`](mailmirror.py) (reference normalizer, stdlib) ·
-[`apps-script/Code.gs`](apps-script/Code.gs) (Gmail worker + benchmark) ·
+[`apps-script/Code.gs`](apps-script/Code.gs) (Gmail worker + `benchmark()`) ·
+[`mcp/server.py`](mcp/server.py) (MCP server) ·
 [`examples/MAILBOX.example.txt`](examples/MAILBOX.example.txt) (synthetic)
 
-Canonical home: [inboxtxt.dev](https://inboxtxt.dev) (site in progress).
-Status: v0.1.2, running in production on the author's inbox, hourly. Not a transport
-(JMAP exists), not a client, not a summarizer. Repo URL predates the name; an unrelated
-commercial "AgentMail" product does the opposite (inboxes *for* agents).
+Canonical home: [inboxtxt.dev](https://inboxtxt.dev).
+Status: **v0.2.1 — draft spec, feedback wanted.** Running in production on the author's
+inbox, hourly, and readable by any MCP-capable agent. Not a transport (JMAP exists), not a
+client, not a summarizer.
+
+## Open questions
+
+The format is a draft and these are genuinely undecided — issues and opinions welcome:
+
+1. **Where should a hosted mirror live?** `/.well-known/inbox.txt` per mailbox, or an
+   authenticated endpoint per user? The former is discoverable, the latter is safer.
+2. **Should tier 1 (`## attention`) be machine-parseable** — fixed fields — or stay
+   human-shaped prose so the model reads it as judgement rather than schema?
+3. **Thread expiry.** The mirror is a window, not an archive. Is time-based (last N days)
+   right, or should classes age differently (SECURITY lingers, MARKETING dies same-day)?
+4. **Multi-account.** One file per mailbox, or one file with a `## mailbox` axis?
+5. **Sender-side adoption.** If a sender emitted a tier-2 body itself (a header pointing at
+   clean text), normalization becomes free. Worth specifying, or fantasy?
 
 *© bleu-canard éditions · Edmaster & Claudius 🦆 · MIT*
