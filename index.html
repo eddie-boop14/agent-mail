@@ -120,8 +120,8 @@ footer{margin-top:5em; padding-top:1.4em; border-top:1px solid var(--rule); colo
 <pre><span class="c"># MAILBOX user@example.com — inbox.txt/0.1 — cursor: 2026-07-28T09:00Z</span>
 
 <span class="k">## index</span>                    <span class="c">← tier 0 · one line per thread</span>
-t_a001 | acme-bank.example | Virement de 250,00 € confirmé | TRANSACTION | #1a2b
-t_a004 | shop.example      | Soldes d’été −40% sur tout    | MARKETING   | #4d5e
+t_a001 | acme-bank.example | Transfer of €250.00 confirmed | TRANSACTION | #1a2b
+t_a004 | shop.example      | Summer sale — 40% off all     | MARKETING   | #4d5e
 
 <span class="k">## attention</span>                <span class="c">← tier 1 · only what needs a human</span>
 <span class="r">SECURITY</span> t_a002  [alice/webshop] deploy failed — verify if this was you
@@ -129,9 +129,9 @@ t_a004 | shop.example      | Soldes d’été −40% sur tout    | MARKETING   |
 
 <span class="k">## bodies</span>                   <span class="c">← tier 2 · cleaned text + extracted entities</span>
 ### t_a003 #3c4d
-entities: {"dates":["29 juillet"],"refs":["AB123456789FR"]}
-Votre colis sera livré mercredi entre 9h et 12h.
-Code de retrait: <span class="redact">[code-redacted]</span>. Absent ? [link:carrier.example]</pre>
+entities: {"dates":["29 July"],"refs":["AB123456789"]}
+Parcel will be delivered Wednesday between 9am and noon.
+Pickup code: <span class="redact">[code-redacted]</span>. Not home? [link:carrier.example]</pre>
     <p class="dim">Tier 3 is raw MIME, fetched only on explicit demand. Marketing never gets a body.
     Content hashes + a cursor make “what’s new” a one-line diff.</p>
   </section>
