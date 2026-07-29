@@ -48,12 +48,14 @@ RFC-822 MIME):
 
 | | chars (exact) | tokens (est. chars÷3.8) |
 |---|---|---|
-| raw MIME | 2,099,654 | ~552,000 |
-| inbox.txt mirror | 28,755 | ~7,600 |
-| **reduction** | **99%** | **~73×** |
+| raw MIME | 2,099,654 | ≈607,000* |
+| inbox.txt mirror | 28,755 | 9,051 measured* |
+| **reduction** | **99%** | **~67× (98.5%)** |
 
 The raw version doesn't even fit a typical context window. The mirror is a side note.
 Run `benchmark()` on your own inbox — one log line.
+
+\* Tokenizer-measured (gpt cl100k) on a live mirror snapshot: 31,317 chars → 9,051 tokens (3.46 chars/token; o200k: 8,697). Raw-side tokens are implied from that measured ratio; raw char counts are exact from `benchmark()`.
 
 ## Rules that are not optional
 
