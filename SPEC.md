@@ -45,8 +45,9 @@ TIER 3 = raw MIME, fetched from the mail store only on explicit demand. Never in
 4. **Untrusted by construction**: the bodies section is labeled as data. Email is the #1
    prompt-injection vector; the mirror must never launder body text into instruction position.
 5. **Auth is not optional**: the mirror is a person's whole life in one file. Self-hosted
-   deployments MUST put it behind auth; the format itself carries no secrets (no OTPs, no
-   full card numbers — redact at normalize time).
+   deployments MUST put it behind auth; the format itself carries no secrets — OTPs, card
+   numbers, API keys (github_pat_, sk-, AIza, xkeysib-…) and long hex/base64 reset codes
+   are redacted at normalize time.
 
 ## Reference implementation
 `mailmirror.py` — ~120 lines, stdlib only. Sync worker (cron/Pi/Cloudflare Worker) pulls via
