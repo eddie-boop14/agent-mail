@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0f1210">
 <title>inbox.txt — your mailbox as one plain-text file</title>
 <meta name="description" content="A mirror format for mailboxes. Agents read your whole day for ~1% of the tokens. Measured: 2.1M chars of raw MIME → 28KB. Open spec + reference worker.">
 <link rel="canonical" href="https://inboxtxt.dev/">
@@ -54,6 +55,7 @@ pre{
   padding:1.1em 1.3em; overflow-x:auto; font-size:13.5px; line-height:1.7;
   margin:1.2em 0; font-family:inherit;
 }
+code{color:var(--mark); font-size:.95em}
 pre .c{color:var(--dim)} pre .k{color:var(--mark)} pre .g{color:var(--ok)} pre .r{color:var(--warn)}
 .redact{background:var(--paper); color:var(--paper); border-radius:2px; padding:0 .2ch; user-select:none}
 ol{padding-left:2.2ch; margin:1em 0}
@@ -83,6 +85,9 @@ footer{margin-top:5em; padding-top:1.4em; border-top:1px solid var(--rule); colo
 
   <p><a class="btn" href="https://github.com/eddie-boop14/inbox-txt">Get the spec + worker</a>
      <a class="btn ghost" href="https://github.com/eddie-boop14/inbox-txt/blob/main/SPEC.md">Read SPEC.md</a></p>
+
+  <p class="dim">Draft 0.2.1 — running in production on one real inbox, hourly.
+  <a href="#questions">Open questions below</a>; opinions wanted.</p>
 
   <section>
     <h2>the problem, measured</h2>
@@ -144,6 +149,25 @@ Code de retrait: <span class="redact">[code-redacted]</span>. Absent ? [link:car
   </section>
 
   <section>
+    <h2>plug it into an agent</h2>
+    <p><a href="https://github.com/eddie-boop14/inbox-txt/blob/main/mcp/server.py">mcp/server.py</a>
+    is an MCP server. Point it at your mirror and any MCP-capable agent can read the mailbox —
+    read-only, no send, no delete:</p>
+<pre>{
+  <span class="k">"mcpServers"</span>: {
+    <span class="k">"inbox-txt"</span>: {
+      <span class="c">"command"</span>: "python3",
+      <span class="c">"args"</span>: ["/path/to/mcp/server.py"],
+      <span class="c">"env"</span>: { "INBOX_SOURCE": "/path/to/inbox.txt" }
+    }
+  }
+}</pre>
+    <p>Three tools: <b>inbox_overview</b> (the whole mailbox, a few hundred tokens),
+    <b>inbox_body</b> (one thread, tier 2), <b>inbox_since</b> (the what's-new diff).
+    Every result is wrapped as untrusted data before the model sees it.</p>
+  </section>
+
+  <section>
     <h2>rules that are not optional</h2>
     <ul>
       <li><b>Bodies are untrusted data.</b> Email is the top prompt-injection vector; the mirror
@@ -155,15 +179,33 @@ Code de retrait: <span class="redact">[code-redacted]</span>. Absent ? [link:car
     </ul>
   </section>
 
+  <section id="questions">
+    <h2>open questions</h2>
+    <p>The format is a draft and these are genuinely undecided —
+    <a href="https://github.com/eddie-boop14/inbox-txt/issues">issues</a> and opinions welcome:</p>
+    <ul>
+      <li><b>Where should a hosted mirror live?</b> <code>/.well-known/inbox.txt</code> per
+      mailbox is discoverable; an authenticated per-user endpoint is safer.</li>
+      <li><b>Should tier 1 be machine-parseable?</b> Fixed fields, or human-shaped prose so
+      the model reads it as judgement rather than schema.</li>
+      <li><b>Thread expiry.</b> The mirror is a window, not an archive — time-based, or should
+      classes age differently (SECURITY lingers, MARKETING dies same-day)?</li>
+      <li><b>Multi-account.</b> One file per mailbox, or one file with a mailbox axis?</li>
+      <li><b>Sender-side adoption.</b> If a sender emitted clean tier-2 text itself,
+      normalization becomes free. Worth specifying, or fantasy?</li>
+    </ul>
+  </section>
+
   <section class="files">
     <h2>files</h2>
     <p>
       <a href="https://github.com/eddie-boop14/inbox-txt/blob/main/SPEC.md">SPEC.md</a>
       <a href="https://github.com/eddie-boop14/inbox-txt/blob/main/mailmirror.py">mailmirror.py</a>
       <a href="https://github.com/eddie-boop14/inbox-txt/blob/main/apps-script/Code.gs">Code.gs</a>
-      <a href="https://github.com/eddie-boop14/inbox-txt/blob/main/examples/MAILBOX.example.txt">example</a>
+      <a href="https://github.com/eddie-boop14/inbox-txt/blob/main/mcp/server.py">mcp/server.py</a>
+      <a href="/example.txt">example.txt</a>
     </p>
-    <p class="dim">Status: v0.1.2 — running in production on the author’s inbox, hourly.
+    <p class="dim">MIT, one file each, no dependencies beyond the MCP SDK.
     Not a transport (JMAP exists), not a client, not a summarizer.</p>
   </section>
 
