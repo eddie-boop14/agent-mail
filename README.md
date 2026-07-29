@@ -94,8 +94,10 @@ Because raw MIME tokenizes worse than clean text, the character-based figures ab
 *understate* the win.
 
 These token numbers apply a measured ratio to exact character counts. To remove the
-extrapolation entirely, deploy [`worker/`](worker/) and run `tokenizeExact7d()` — it streams
-the whole corpus through a real tokenizer and reports both sides exactly.
+extrapolation entirely, deploy a tokenizer and run `tokenizeExact7d()`, which streams the
+whole corpus through it and reports both sides exactly. Two are included:
+[`netlify/functions/tokenize.mjs`](netlify/functions/tokenize.mjs) (deploys with the site,
+10-second budget — the easy one) or [`worker/`](worker/) for Cloudflare.
 
 ## Rules that are not optional
 
