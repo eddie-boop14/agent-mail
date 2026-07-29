@@ -94,8 +94,13 @@ function cleanBody(text) {
 
 function entities(text) {
   var e = {};
-  var am = text.match(/\d[\d\s.,]*\s?€/g);
-  var dt = text.match(/\b\d{1,2}\s(?:janv|févr|mars|avril|mai|juin|juil|août|sept|oct|nov|déc)\S*\.?\s?\d{0,4}/gi);
+  // multi-currency: €1.234,56 · $1,234.56 · £250 · 250 € · ¥800
+  var am = text.match(/(?:[€$£¥]\s?\d[\d\s.,]*\d|\d[\d\s.,]*\s?[€$£¥])/g);
+  // dates in EN and FR, either order: "29 July 2026" · "July 29, 2026" · "26 août 2026"
+  var MONTH = '(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|janv|f\u00e9vr|avr|mai|juil|ao\u00fbt|d\u00e9c)';
+  var dt = (text.match(new RegExp('\\b\\d{1,2}\\s' + MONTH + '[a-z\u00e9\u00fb]*\\.?\\s?\\d{0,4}', 'gi')) || [])
+    .concat(text.match(new RegExp('\\b' + MONTH + '[a-z]*\\.?\\s\\d{1,2},?\\s?\\d{0,4}', 'gi')) || []);
+  if (!dt.length) dt = null;
   var rf = text.match(/\b(?=[A-Z0-9]*\d)[A-Z0-9]{6,12}\b/g);
   if (am) e.amounts = uniq(am).slice(0, 4);
   if (dt) e.dates   = uniq(dt).slice(0, 4);
