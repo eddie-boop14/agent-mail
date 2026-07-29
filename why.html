@@ -89,15 +89,15 @@ footer{margin-top:4.5em; padding-top:1.4em; border-top:1px solid var(--rule); co
   <h2>what it looks like</h2>
 
 <pre><span class="k">## index</span>        <span class="c">← tier 0 · one line per thread</span>
-t_a001 | acme-bank.example | Virement de 250,00 € confirmé | TRANSACTION | #1a2b
+t_a001 | acme-bank.example | Transfer of €250.00 confirmed | TRANSACTION | #1a2b
 
 <span class="k">## attention</span>    <span class="c">← tier 1 · only what needs a human</span>
 SECURITY t_a002  deploy failed — verify if this was you
 
 <span class="k">## bodies</span>       <span class="c">← tier 2 · cleaned text + extracted entities</span>
 ### t_a003 #3c4d
-entities: {"dates":["29 juillet"],"refs":["AB123456789FR"]}
-Votre colis sera livré mercredi entre 9h et 12h. [code-redacted]</pre>
+entities: {"dates":["29 July"],"refs":["AB123456789"]}
+Parcel will be delivered Wednesday between 9am and noon. [code-redacted]</pre>
 
   <p>Tier 3 is raw MIME, fetched on explicit demand, never in the mirror. Content hashes plus
   a cursor make “what's new” a one-line diff.</p>
