@@ -2,6 +2,7 @@
 
 *A mirror format for mailboxes, so agents stop paying MIME prices for plain-text questions.*
 *Same move as llms.txt, pointed at SMTP. — bleu-canard éditions, 2026*
+*Canonical home: https://inboxtxt.dev · Reference: https://github.com/eddie-boop14/agent-mail*
 
 ## Problem
 An LLM agent answering "anything important in my mail?" today fetches full MIME payloads:
@@ -51,17 +52,18 @@ TIER 3 = raw MIME, fetched from the mail store only on explicit demand. Never in
 `mailmirror.py` — ~120 lines, stdlib only. Sync worker (cron/Pi/Cloudflare Worker) pulls via
 Gmail/JMAP/IMAP, normalizes, writes the mirror. Agents read one file.
 
-## Measured (real inbox, 2026-07-27, 15 threads)
-| | raw (FULL_CONTENT) | mirror | reduction |
-|---|---|---|---|
-| Klarna receipt (1 msg) | ~60,000 chars ≈ ~17k tokens* | ~500 chars ≈ 140 tokens | ~99% |
-| Marketing welcome (1 msg) | ~35,000 chars ≈ ~10k tokens* | 1 index line ≈ 35 tokens | ~99.7% |
-| Full 15-thread sweep | est. 150k–300k chars | 3,900 chars ≈ ~1,100 tokens | ~97–99% |
+## Measured (real inbox, 2026-07-29, benchmark() over raw RFC-822 MIME)
 
-*Token figures are estimates (chars÷4, adjusted upward for URL-dense text which tokenizes
-worse). Character counts measured from live payloads. Sweep raw total is estimated from the
-two measured messages plus snippet-level sizing of the rest — full-corpus measurement is the
-next validation step.
+| | chars (exact) | tokens (est. chars÷3.8) |
+|---|---|---|
+| raw MIME, 38 threads / 47 messages | 2,099,654 | ~552,000 |
+| inbox.txt mirror | 28,755 | ~7,600 |
+| **reduction** | **99%** | **~73×** |
+
+Method: Apps Script `benchmark()` sums `getRawContent().length` across every message and
+compares against the live mirror file. Char counts are exact; token figures are estimates
+(chars÷3.8) and labeled as such. The raw corpus exceeds most models' context windows —
+the mirror is what makes continuous inbox-watching agents economically possible.
 
 ## Non-goals
 Not a transport (JMAP solved that). Not a mail client. Not a summarizer that hallucinates —
