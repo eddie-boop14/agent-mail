@@ -69,7 +69,8 @@ Run `benchmark()` on your own inbox — one log line.
 [`apps-script/Code.gs`](apps-script/Code.gs) (Gmail worker + benchmark) ·
 [`examples/MAILBOX.example.txt`](examples/MAILBOX.example.txt) (synthetic)
 
-Status: v0.1.1, running in production on the author's inbox, hourly. Not a transport
+Canonical home: [inboxtxt.dev](https://inboxtxt.dev) (site in progress).
+Status: v0.1.2, running in production on the author's inbox, hourly. Not a transport
 (JMAP exists), not a client, not a summarizer. Repo URL predates the name; an unrelated
 commercial "AgentMail" product does the opposite (inboxes *for* agents).
 
