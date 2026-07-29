@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0f1210">
 <title>My inbox doesn't fit in a context window — inbox.txt</title>
-<meta name="description" content="Two days of my mailbox is 2,099,654 characters of raw MIME. Roughly 607,000 tokens. Here's the flip that makes it 9,051 — and why it belongs at delivery time, not read time.">
+<meta name="description" content="A month of my mailbox is 20,642,353 characters of raw MIME. The mirror of it is 173 KB. Here is the flip that does that, and why it belongs at delivery time, not read time.">
 <link rel="canonical" href="https://inboxtxt.dev/why.html">
 <meta property="og:title" content="My inbox doesn't fit in a context window">
 <meta property="og:description" content="2,099,654 characters of raw MIME → a 9,051-token plain-text mirror. The proposal behind inbox.txt.">
@@ -109,10 +109,20 @@ Parcel will be delivered Wednesday between 9am and noon. [code-redacted]</pre>
 
   <p>That's about 67× fewer tokens. The raw version doesn't fit; the mirror is a footnote.</p>
 
-  <p>I ran it again the next day on a shifted window — 52 messages instead of 47 —
-  and got 1,852,637 → 30,908 characters. 98%, about 60×. The ratio moves with your mail
-  mix, which is why the tool that produces these numbers ships with the spec: run it on
-  your own inbox rather than trusting mine.</p>
+  <p>Then I widened the window. Seven days: 4,286,586 characters → 68,125. Thirty days:
+  <b>20,642,353 characters → 173,437</b> — 99.2%, about 119× smaller. A month of my mail is
+  millions of tokens raw and unreadable by any model; the mirror of that same month is 173 KB
+  and fits in one prompt with room left over.</p>
+
+  <p>The per-class breakdown corrected something I believed. I expected human mail to show the
+  worst ratio, on the theory that a person's words are mostly information. Over thirty days
+  it was near the best — 99.6% — because human threads are where the attachments live, and a
+  base64-encoded photo is pure bulk that never reaches the mirror. The win is largest exactly
+  where the bytes carry least.</p>
+
+  <p>The ratio moves with your mail mix, which is why the tool that produces these numbers
+  ships with the spec — including a tokenizer worker, so the token counts are measured rather
+  than estimated. Run it on your own inbox rather than trusting mine.</p>
 
   <p>Which makes it a capability, not a saving. An agent watching my inbox hourly at raw
   prices is fantasy. At mirror prices it's a cron job — and on the first day mine ran, it
