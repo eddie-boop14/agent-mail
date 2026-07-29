@@ -174,21 +174,82 @@ function syncMirror() {
 }
 
 /**
- * benchmark() — run once, read the log, get your headline number.
- * Sums true raw MIME size (getRawContent) of every message in the last
- * MAX_THREADS threads and compares against the live mirror file.
- * Run syncMirror first so the mirror is fresh.
+ * benchmark — measure this inbox: raw MIME vs mirror, overall and per class.
+ *
+ * Pick one from the function dropdown and press Run, then read the log:
+ *   benchmark()      the sync window (SEARCH, default 2 days)
+ *   benchmark7d()    last 7 days,  up to 150 threads
+ *   benchmark30d()   last 30 days, up to 400 threads
+ *
+ * getRawContent() is the slow part. A 4m40s guard stops the walk before Apps
+ * Script's 6-minute ceiling and reports what it managed — a partial run is
+ * labelled PARTIAL in the log, never silently truncated.
+ *
+ * It also writes benchmark-sample.txt to your Drive: the first 4 KB of raw MIME
+ * for one message per class. That file is what makes token counts real — tokenize
+ * it with a real tokenizer (tiktoken / gpt-tokenizer) to get raw MIME's actual
+ * chars-per-token, instead of borrowing a ratio measured on clean text.
  */
-function benchmark() {
-  var threads = GmailApp.search(SEARCH, 0, MAX_THREADS);
-  var raw = 0, msgs = 0;
-  threads.forEach(function(th) {
-    th.getMessages().forEach(function(m) { raw += m.getRawContent().length; msgs++; });
+function benchmark()      { return benchmarkRun(SEARCH, MAX_THREADS, 'sync window'); }
+function benchmark7d()    { return benchmarkRun('newer_than:7d -in:trash -in:spam', 150, '7 days'); }
+function benchmark30d()   { return benchmarkRun('newer_than:30d -in:trash -in:spam', 400, '30 days'); }
+
+function benchmarkRun(search, cap, label) {
+  var t0 = Date.now(), GUARD = 280000;           // 4m40s
+  var threads = GmailApp.search(search, 0, cap);
+  var raw = 0, mir = 0, msgs = 0, walked = 0, partial = false;
+  var byClass = {}, sample = [], seenClass = {};
+
+  threads.forEach(function (th) {
+    if (Date.now() - t0 > GUARD) { partial = true; return; }
+    var all = th.getMessages(), last = all[all.length - 1], r = 0;
+    all.forEach(function (m) { r += m.getRawContent().length; msgs++; });
+
+    var sender  = last.getFrom();
+    var subject = (th.getFirstMessageSubject() || '(no subject)').replace(/\s+/g, ' ').trim().substring(0, 48);
+    var kind    = classify(sender, subject);
+    var body    = cleanBody(last.getPlainBody());
+    var domain  = (sender.match(/@([^>\s]+)/) || [, '?'])[1];
+
+    // mirror cost for this thread: tier-0 line, plus tier-2 body unless MARKETING
+    var line = ['t_xxxx', domain, subject, kind, '2026-01-01T00:00', '#hash'].join(' | ');
+    var cost = line.length + 1;
+    if (kind !== 'MARKETING' && body) cost += Math.min(body.length, BODY_CAP) + 24;
+
+    raw += r; mir += cost; walked++;
+    var c = byClass[kind] || (byClass[kind] = { n: 0, raw: 0, mir: 0 });
+    c.n++; c.raw += r; c.mir += cost;
+
+    if (!seenClass[kind] && r > 800) {
+      seenClass[kind] = true;
+      sample.push('=== ' + kind + ' (' + domain + ') ===\n' + last.getRawContent().substring(0, 4000));
+    }
   });
-  var it = DriveApp.getFilesByName(FILE_NAME);
-  var mir = it.hasNext() ? it.next().getBlob().getDataAsString().length : 0;
-  Logger.log('BENCHMARK: ' + threads.length + ' threads / ' + msgs + ' messages | raw MIME: ' +
-    raw + ' chars | mirror: ' + mir + ' chars | reduction: ' +
-    (raw ? (100 - Math.round(100 * mir / raw)) : 0) + '% | est. tokens: ~' +
-    Math.round(raw / 3.8) + ' -> ~' + Math.round(mir / 3.8));
+
+  var pct = function (a, b) { return b ? (100 - 100 * a / b).toFixed(1) + '%' : '—'; };
+  var out = ['BENCHMARK ' + (partial ? '(PARTIAL) ' : '') + label + ': ' + walked + '/' + threads.length +
+             ' threads · ' + msgs + ' messages',
+             '  raw MIME : ' + raw + ' chars',
+             '  mirror   : ' + mir + ' chars',
+             '  reduction: ' + pct(mir, raw) + '  (' + (mir ? (raw / mir).toFixed(0) : '—') + '× smaller)',
+             '  by class:'];
+  Object.keys(byClass).sort(function (a, b) { return byClass[b].raw - byClass[a].raw; }).forEach(function (k) {
+    var c = byClass[k];
+    out.push('    ' + (k + '        ').substring(0, 12) + c.n + ' thr · raw ' + c.raw +
+             ' → mirror ' + c.mir + '  (' + pct(c.mir, c.raw) + ')');
+  });
+
+  if (sample.length) {
+    var txt = '# raw MIME sample for tokenizer measurement — ' + new Date().toISOString() + '\n' +
+              '# full run: ' + raw + ' raw chars / ' + mir + ' mirror chars over ' + walked + ' threads\n' +
+              '# one message per class, first 4000 chars each. Tokenize this to get raw chars/token.\n\n' +
+              sample.join('\n\n');
+    var it = DriveApp.getFilesByName('benchmark-sample.txt');
+    if (it.hasNext()) it.next().setContent(txt); else DriveApp.createFile('benchmark-sample.txt', txt, 'text/plain');
+    out.push('  wrote benchmark-sample.txt (' + txt.length + ' chars, ' + sample.length + ' classes)');
+  }
+  if (partial) out.push('  NOTE: stopped at the time guard — widen in stages or lower the cap.');
+
+  Logger.log(out.join('\n'));
+  return out.join('\n');
 }
