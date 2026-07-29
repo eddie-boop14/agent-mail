@@ -118,9 +118,10 @@ footer{margin-top:5em; padding-top:1.4em; border-top:1px solid var(--rule); colo
     <p class="dim">A month of mail is ~9.8 M tokens of raw MIME — about fifty times a large context
     window. The mirror of that month is ~50 k tokens: one prompt. Because raw MIME tokenizes worse
     than clean text, the character figures above understate the win. Token counts apply a measured
-    ratio to exact char counts; deploy
-    <a href="https://github.com/eddie-boop14/inbox-txt/tree/main/worker">worker/</a> and run
-    <b>tokenizeExact7d()</b> to remove the extrapolation entirely.</p>
+    ratio to exact char counts; deploy the included
+    <a href="https://github.com/eddie-boop14/inbox-txt/blob/main/netlify/functions/tokenize.mjs">Netlify function</a>
+    or <a href="https://github.com/eddie-boop14/inbox-txt/tree/main/worker">Cloudflare worker</a>
+    and run <b>tokenizeExact7d()</b> to remove the extrapolation entirely.</p>
 
     <p class="dim">Per class over those 30 days the win is largest where the bytes carry least:
     MARKETING 99.9%, HUMAN 99.6%, TRANSACTION 98.1%, DEV 98.0%, SECURITY 98.0%. HUMAN near the
