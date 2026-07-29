@@ -56,13 +56,12 @@ Gmail/JMAP/IMAP, normalizes, writes the mirror. Agents read one file.
 
 | | chars (exact) | tokens (est. chars÷3.8) |
 |---|---|---|
-| raw MIME, 38 threads / 47 messages | 2,099,654 | ~552,000 |
-| inbox.txt mirror | 28,755 | ~7,600 |
-| **reduction** | **99%** | **~73×** |
+| raw MIME, 38 threads / 47 messages | 2,099,654 | ≈607,000* |
+| inbox.txt mirror | 28,755 | 9,051 measured* |
+| **reduction** | **99%** | **~67× (98.5%)** |
 
 Method: Apps Script `benchmark()` sums `getRawContent().length` across every message and
-compares against the live mirror file. Char counts are exact; token figures are estimates
-(chars÷3.8) and labeled as such. The raw corpus exceeds most models' context windows —
+compares against the live mirror file. Char counts are exact. Tokenizer-measured (gpt cl100k) on a live mirror snapshot: 31,317 chars → 9,051 tokens (3.46 chars/token; o200k: 8,697). Raw-side tokens are implied from that measured ratio; raw char counts are exact from `benchmark()`. The raw corpus exceeds most models' context windows —
 the mirror is what makes continuous inbox-watching agents economically possible.
 
 ## Non-goals
