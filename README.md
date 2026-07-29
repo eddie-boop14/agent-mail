@@ -30,15 +30,15 @@ a few hundred tokens), `inbox_body`, `inbox_since`. All output is wrapped as unt
 # MAILBOX <address> — inbox.txt/0.1 — cursor: <ISO8601>
 
 ## index                 ← tier 0 · one line per thread
-t_ccdd | klarna.fr | 1er paiement reçu | TRANSACTION | 2026-07-27T03:25 | #f87f
+t_a001 | acme-bank.example | Transfer of €250.00 confirmed | TRANSACTION | 2026-07-28T08:12 | #1a2b
 
 ## attention             ← tier 1 · only what needs action
 SECURITY t_294c  RLS disabled on project X — verify
 
 ## bodies                ← tier 2 · cleaned text + extracted entities
-### t_ccdd #f87f
-entities: {"amounts":["312,33 €"],"dates":["26 août 2026"],"refs":["V2XBRSVH"]}
-Paiement de 312,33 € effectué. Prochain prélèvement le 26 août 2026...
+### t_a001 #1a2b
+entities: {"amounts":["€250.00"],"dates":["28 July 2026"],"refs":["TRF78912"]}
+Your transfer of €250.00 to John Doe completed on 28 July 2026. Reference: TRF78912...
 ```
 
 Tier 3 = raw MIME, fetched on explicit demand only. Classes: HUMAN · TRANSACTION ·
