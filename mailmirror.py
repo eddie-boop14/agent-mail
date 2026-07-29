@@ -81,14 +81,15 @@ def redact(text: str) -> str:
     return text
 
 # ---------------------------------------------------------------- entities
-AMOUNT = re.compile(r'\d[\d\s.,]*\s?€')
+AMOUNT = re.compile(r'(?:[€$£¥]\s?\d[\d\s.,]*\d|\d[\d\s.,]*\s?[€$£¥])')
 REF    = re.compile(r'\b([A-Z0-9]{6,12}|[a-f0-9]{8}-[a-f0-9]{4}-\S{4,25})\b')
-DATEFR = re.compile(r'\b\d{1,2}\s(?:janv|févr|mars|avril|mai|juin|juil|août|sept|oct|nov|déc)\S*\.?\s?\d{0,4}', re.I)
+_M = r'(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|janv|févr|avr|mai|juil|août|déc)'
+DATE = re.compile(r'\b\d{1,2}\s' + _M + r'[a-zéû]*\.?\s?\d{0,4}|\b' + _M + r'[a-z]*\.?\s\d{1,2},?\s?\d{0,4}', re.I)
 
 def entities(text: str) -> dict:
     e = {}
     if m := AMOUNT.findall(text):  e["amounts"] = sorted(set(m))[:4]
-    if m := DATEFR.findall(text):  e["dates"]   = sorted(set(m))[:4]
+    if m := DATE.findall(text):    e["dates"]   = sorted(set(m))[:4]
     if m := REF.findall(text):     e["refs"]    = sorted(set(m))[:3]
     return e
 
