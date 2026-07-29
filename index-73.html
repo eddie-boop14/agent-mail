@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>inbox.txt — your mailbox as one plain-text file</title>
+<meta name="description" content="A mirror format for mailboxes. Agents read your whole day for ~1% of the tokens. Measured: 2.1M chars of raw MIME → 28KB. Open spec + reference worker.">
+<link rel="canonical" href="https://inboxtxt.dev/">
+<meta property="og:title" content="inbox.txt — your mailbox as one plain-text file">
+<meta property="og:description" content="robots.txt → crawlers. llms.txt → websites. inbox.txt → your mail. Measured 99% token reduction.">
+<meta property="og:url" content="https://inboxtxt.dev/">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>📬</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,600;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0f1210; --paper:#d6d3c8; --dim:#78766b; --faint:#3a3d38;
+  --mark:#ffd23f; --ok:#7dc98f; --warn:#e07a5f; --rule:#242721;
+}
+*{box-sizing:border-box; margin:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--ink); color:var(--paper);
+  font-family:'JetBrains Mono', ui-monospace, 'Cascadia Mono', Menlo, monospace;
+  font-size:15px; line-height:1.75; font-weight:400;
+  padding:clamp(20px,5vw,64px) clamp(16px,6vw,80px);
+}
+main{max-width:76ch; margin:0 auto}
+a{color:var(--paper); text-decoration:underline; text-decoration-color:var(--mark); text-underline-offset:3px}
+a:hover{color:var(--mark)}
+a:focus-visible{outline:2px solid var(--mark); outline-offset:3px}
+h1,h2{font-weight:800; letter-spacing:-.01em}
+.filehead{color:var(--dim); font-weight:300}
+.filehead b{color:var(--paper); font-weight:600}
+.cursor{display:inline-block; width:.6ch; height:1.1em; background:var(--mark); vertical-align:text-bottom; animation:blink 1.1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.cursor{animation:none}}
+.pitch{font-size:clamp(19px,3.2vw,27px); font-weight:800; line-height:1.35; margin:1.6em 0 .8em}
+.pitch em{font-style:normal; background:var(--mark); color:var(--ink); padding:0 .25ch}
+.lineage{color:var(--dim); margin-bottom:2.5em}
+.lineage b{color:var(--paper); font-weight:600}
+section{margin:3.2em 0}
+h2{font-size:15px; color:var(--mark); font-weight:600; margin-bottom:1.1em}
+h2::before{content:"## "; color:var(--faint); font-weight:400}
+p{margin:.9em 0; max-width:68ch}
+.dim{color:var(--dim)}
+table{border-collapse:collapse; margin:1.2em 0; width:100%; max-width:56ch}
+th,td{text-align:left; padding:.35em 1.4em .35em 0; border-bottom:1px solid var(--rule); font-weight:400}
+th{color:var(--dim); font-weight:300}
+td b{color:var(--mark); font-weight:800}
+pre{
+  background:#131613; border:1px solid var(--rule); border-radius:4px;
+  padding:1.1em 1.3em; overflow-x:auto; font-size:13.5px; line-height:1.7;
+  margin:1.2em 0; font-family:inherit;
+}
+pre .c{color:var(--dim)} pre .k{color:var(--mark)} pre .g{color:var(--ok)} pre .r{color:var(--warn)}
+.redact{background:var(--paper); color:var(--paper); border-radius:2px; padding:0 .2ch; user-select:none}
+ol{padding-left:2.2ch; margin:1em 0}
+ol li{margin:.7em 0}
+ul{list-style:none; padding:0}
+ul li{margin:.85em 0; padding-left:2.4ch; text-indent:-2.4ch}
+ul li::before{content:"— "; color:var(--faint)}
+ul li b{font-weight:600; color:var(--paper)}
+.files a{margin-right:2.5ch}
+footer{margin-top:5em; padding-top:1.4em; border-top:1px solid var(--rule); color:var(--dim); font-size:13px; font-weight:300}
+.btn{
+  display:inline-block; background:var(--mark); color:var(--ink); font-weight:800;
+  padding:.55em 1.2em; border-radius:4px; text-decoration:none; margin:.6em 1.2ch .6em 0;
+}
+.btn:hover{color:var(--ink); filter:brightness(1.08)}
+.btn.ghost{background:transparent; color:var(--paper); border:1px solid var(--faint)}
+.btn.ghost:hover{border-color:var(--mark); color:var(--mark)}
+</style>
+</head>
+<body>
+<main>
+  <p class="filehead"># MAILBOX <b>you@anywhere</b> — inbox.txt/0.1 — cursor: always fresh<span class="cursor" aria-hidden="true"></span></p>
+
+  <p class="pitch">Your mailbox as one plain-text file.<br>Agents read your whole day for <em>~1% of the tokens</em>.</p>
+
+  <p class="lineage">robots.txt → crawlers. llms.txt → websites. <b>inbox.txt → your mail.</b></p>
+
+  <p><a class="btn" href="https://github.com/eddie-boop14/agent-mail">Get the spec + worker</a>
+     <a class="btn ghost" href="https://github.com/eddie-boop14/agent-mail/blob/main/SPEC.md">Read SPEC.md</a></p>
+
+  <section>
+    <h2>the problem, measured</h2>
+    <p>An agent answering <i>“anything important in my mail?”</i> today swallows full MIME:
+    HTML tables six levels deep, 600-character tracking URLs, legal footers, quoted history.
+    Measured on a real inbox — one payment receipt is ~60,000 characters of payload carrying
+    ~350 characters of information. Every agent pays that on every read, forever.</p>
+    <table>
+      <tr><th>real inbox, 2 days, 47 messages</th><th>chars (exact)</th><th>tokens (est.)</th></tr>
+      <tr><td>raw MIME</td><td>2,099,654</td><td>~552,000</td></tr>
+      <tr><td>inbox.txt mirror</td><td>28,755</td><td>~7,600</td></tr>
+      <tr><td><b>reduction</b></td><td><b>99%</b></td><td><b>~73×</b></td></tr>
+    </table>
+    <p class="dim">The raw version doesn’t fit a typical context window. The mirror is a side note —
+    cheap enough that an agent can watch your inbox all day.</p>
+  </section>
+
+  <section>
+    <h2>the flip</h2>
+    <p><b>Normalize once at sync time. Read the mirror forever.</b>
+    Mail has one chokepoint — delivery — where spam filters and DKIM already parse every
+    message once. Add one more pass there: strip the soup, extract the entities, classify,
+    hash, append to a tiered plain-text mirror. Parsing cost is linear in mail received;
+    savings are linear in agent reads — the exploding term.</p>
+  </section>
+
+  <section>
+    <h2>how it reads</h2>
+<pre><span class="c"># MAILBOX user@example.com — inbox.txt/0.1 — cursor: 2026-07-28T09:00Z</span>
+
+<span class="k">## index</span>                    <span class="c">← tier 0 · one line per thread</span>
+t_a001 | acme-bank.example | Virement de 250,00 € confirmé | TRANSACTION | #1a2b
+t_a004 | shop.example      | Soldes d’été −40% sur tout    | MARKETING   | #4d5e
+
+<span class="k">## attention</span>                <span class="c">← tier 1 · only what needs a human</span>
+<span class="r">SECURITY</span> t_a002  [alice/webshop] deploy failed — verify if this was you
+<span class="g">REPLY?</span>   t_a006  unread human mail from bob-partner.example
+
+<span class="k">## bodies</span>                   <span class="c">← tier 2 · cleaned text + extracted entities</span>
+### t_a003 #3c4d
+entities: {"dates":["29 juillet"],"refs":["AB123456789FR"]}
+Votre colis sera livré mercredi entre 9h et 12h.
+Code de retrait: <span class="redact">[code-redacted]</span>. Absent ? [link:carrier.example]</pre>
+    <p class="dim">Tier 3 is raw MIME, fetched only on explicit demand. Marketing never gets a body.
+    Content hashes + a cursor make “what’s new” a one-line diff.</p>
+  </section>
+
+  <section>
+    <h2>quickstart <span class="dim" style="font-weight:300">(5 min · no server · no OAuth app)</span></h2>
+    <ol>
+      <li>script.google.com → new project → paste
+        <a href="https://github.com/eddie-boop14/agent-mail/blob/main/apps-script/Code.gs">Code.gs</a> → save.</li>
+      <li>Run <b>syncMirror</b> once → authorize your own script on your own account →
+        <b>inbox.txt</b> appears in your Drive.</li>
+      <li>Triggers → syncMirror · time-driven · every hour. Done — point any agent at that file.</li>
+    </ol>
+    <p class="dim">Run <b>benchmark()</b> for your own raw-vs-mirror numbers — one log line.</p>
+  </section>
+
+  <section>
+    <h2>rules that are not optional</h2>
+    <ul>
+      <li><b>Bodies are untrusted data.</b> Email is the top prompt-injection vector; the mirror
+      labels bodies so agents never treat mail content as instructions.</li>
+      <li><b>Auth the mirror.</b> It’s your life in one file.</li>
+      <li><b>Redact at sync time.</b> OTPs and card-like numbers never enter the mirror.</li>
+      <li><b>Never fabricate.</b> Entities are extracted, not inferred. Missing beats wrong.</li>
+    </ul>
+  </section>
+
+  <section class="files">
+    <h2>files</h2>
+    <p>
+      <a href="https://github.com/eddie-boop14/agent-mail/blob/main/SPEC.md">SPEC.md</a>
+      <a href="https://github.com/eddie-boop14/agent-mail/blob/main/mailmirror.py">mailmirror.py</a>
+      <a href="https://github.com/eddie-boop14/agent-mail/blob/main/apps-script/Code.gs">Code.gs</a>
+      <a href="https://github.com/eddie-boop14/agent-mail/blob/main/examples/MAILBOX.example.txt">example</a>
+    </p>
+    <p class="dim">Status: v0.1.2 — running in production on the author’s inbox, hourly.
+    Not a transport (JMAP exists), not a client, not a summarizer.</p>
+  </section>
+
+  <footer>
+    <p>MIT · © bleu-canard éditions · Edmaster &amp; Claudius 🦆 ·
+    <a href="https://github.com/eddie-boop14/agent-mail">github.com/eddie-boop14/agent-mail</a></p>
+  </footer>
+</main>
+</body>
+</html>
