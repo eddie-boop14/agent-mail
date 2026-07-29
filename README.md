@@ -76,28 +76,30 @@ HUMAN topping the table was a surprise — human threads carry the attachments, 
 base64-encoded photo is pure bulk that never reaches the mirror.
 
 
-### In tokens
+### In tokens — measured in full, no sampling
 
-Characters are the exact, reproducible unit. Tokens are what an agent actually pays, so they
-were measured too: **raw MIME tokenizes at 2.10 chars/token** (cl100k, measured on a
-19,899-char stratified sample — one message per class; per-class spread is narrow, 1.99–2.22).
-The mirror, being clean text, runs 3.46.
+Tokens are what an agent actually pays. Both sides were tokenized in their entirety by
+streaming the corpus through the bundled tokenizer (cl100k) — no extrapolation:
 
-| window | raw ≈ tokens | mirror ≈ tokens | reduction |
+| 7 days · 93 threads / 109 messages | chars | tokens | chars/token |
 |---|---|---|---|
-| 7 days | 2,037,000 | 19,700 | 99.0% · 103× |
-| **30 days** | **9,809,000** | **50,100** | **99.5% · 196×** |
+| raw MIME | 4,286,586 | 1,919,892 | 2.23 |
+| inbox.txt mirror | 70,713 | 21,481 | 3.29 |
+| **reduction** | 98.35% | **98.88% — 89× fewer** | |
 
-A month of mail is roughly **9.8 million tokens** of raw MIME — about fifty times a large
-context window. The mirror of that month is ~50,000 tokens, which fits in one prompt.
-Because raw MIME tokenizes worse than clean text, the character-based figures above
-*understate* the win.
+Raw MIME tokenizes at 2.23 chars/token against the mirror's 3.29, because DKIM signatures
+and base64 are near-random to a tokenizer. So the character figures above *understate* the
+token win by about 48%.
 
-These token numbers apply a measured ratio to exact character counts. To remove the
-extrapolation entirely, deploy a tokenizer and run `tokenizeExact7d()`, which streams the
-whole corpus through it and reports both sides exactly. Two are included:
-[`netlify/functions/tokenize.mjs`](netlify/functions/tokenize.mjs) (deploys with the site,
-10-second budget — the easy one) or [`worker/`](worker/) for Cloudflare.
+Applying those two measured ratios to the exact 30-day character counts: roughly **9,256,000
+raw tokens against 52,700 for the mirror — about 175×**. A month of mail is some nine million
+tokens of MIME, around forty-five times a large context window. Its mirror is one prompt.
+
+Reproduce on your own inbox with `tokenizeExact7d()` once a tokenizer is deployed —
+[`netlify/functions/tokenize.mjs`](netlify/functions/tokenize.mjs) (deploys with the site) or
+[`worker/`](worker/) for Cloudflare. A sample-derived estimate put this at 103× before the
+full measurement said 89×; sampling flattered it by 16%, which is why the tool ships with
+the spec.
 
 ## Rules that are not optional
 
