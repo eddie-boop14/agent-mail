@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="inbox.txt">
+  <title>inbox.txt</title>
+  <!-- Two lines of text and a cursor: the site's own motif, and the smallest
+       honest picture of what the format is. Built on a 16-unit grid so every
+       edge lands on a whole pixel at 16x16. -->
+  <rect width="64" height="64" rx="12" fill="#0f1210"/>
+  <rect x="12" y="16" width="40" height="6" fill="#e8e6e1"/>
+  <rect x="12" y="28" width="28" height="6" fill="#e8e6e1"/>
+  <rect x="12" y="40" width="16" height="12" fill="#e8a832"/>
+</svg>
