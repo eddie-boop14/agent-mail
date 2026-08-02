@@ -10,6 +10,22 @@
 <meta property="og:title" content="inbox.txt — your mailbox as one plain-text file">
 <meta property="og:description" content="robots.txt → crawlers. llms.txt → websites. inbox.txt → your mail. Measured 99% token reduction.">
 <meta property="og:url" content="https://inboxtxt.dev/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="inbox.txt">
+<meta property="og:locale" content="en_GB">
+<meta property="og:image" content="https://inboxtxt.dev/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="inbox.txt — 1,919,892 tokens of raw MIME, 21,481 mirrored.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="inbox.txt — your mailbox as one plain-text file">
+<meta name="twitter:description" content="7 days of a real mailbox: 1,919,892 tokens of raw MIME, 21,481 mirrored. Measured in full, not sampled.">
+<meta name="twitter:image" content="https://inboxtxt.dev/og.png">
+<meta name="author" content="Eddie Raset">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+<link rel="alternate" type="text/plain" href="https://inboxtxt.dev/llms.txt" title="llms.txt — curated index for models">
+<link rel="alternate" type="text/plain" href="https://inboxtxt.dev/llms-full.txt" title="llms-full.txt — every page in one file">
+<link rel="author" type="text/plain" href="https://inboxtxt.dev/humans.txt">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>📬</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -74,6 +90,62 @@ footer{margin-top:5em; padding-top:1.4em; border-top:1px solid var(--rule); colo
 .btn.ghost{background:transparent; color:var(--paper); border:1px solid var(--faint)}
 .btn.ghost:hover{border-color:var(--mark); color:var(--mark)}
 </style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://inboxtxt.dev/#website",
+      "url": "https://inboxtxt.dev/",
+      "name": "inbox.txt",
+      "description": "A mirror format for mailboxes. Sync once at delivery time; agents read the mirror cheaply, forever.",
+      "inLanguage": "en",
+      "publisher": { "@id": "https://inboxtxt.dev/#person" },
+      "license": "https://opensource.org/licenses/MIT"
+    },
+    {
+      "@type": "Person",
+      "@id": "https://inboxtxt.dev/#person",
+      "name": "Eddie Raset",
+      "alternateName": "Edmaster",
+      "url": "https://github.com/eddie-boop14",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Saint-Jorioz",
+        "addressRegion": "Haute-Savoie",
+        "addressCountry": "FR"
+      }
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://inboxtxt.dev/#spec",
+      "headline": "inbox.txt — a mirror format for mailboxes",
+      "abstract": "Seven days of a real mailbox is 4,286,586 characters of raw MIME, or 1,919,892 tokens. The same week mirrored is 21,481 tokens: 98.9%, about 89 times fewer, tokenized in full rather than sampled.",
+      "url": "https://inboxtxt.dev/",
+      "author": { "@id": "https://inboxtxt.dev/#person" },
+      "datePublished": "2026-07-29",
+      "dateModified": "2026-08-01",
+      "inLanguage": "en",
+      "license": "https://opensource.org/licenses/MIT",
+      "proficiencyLevel": "Expert",
+      "keywords": "email, mailbox, plain text, LLM, agents, tokens, prompt injection, llms.txt, MIME, IMAP, JMAP",
+      "isPartOf": { "@id": "https://inboxtxt.dev/#website" }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://inboxtxt.dev/#code",
+      "name": "inbox.txt reference implementation",
+      "description": "A Google Apps Script sync worker, a Python normalizer, an MCP server, and the tokenizer used to produce the published benchmark.",
+      "codeRepository": "https://github.com/eddie-boop14/inbox-txt",
+      "programmingLanguage": ["JavaScript", "Python"],
+      "license": "https://opensource.org/licenses/MIT",
+      "author": { "@id": "https://inboxtxt.dev/#person" },
+      "runtimePlatform": "Google Apps Script"
+    }
+  ]
+}
+</script>
 </head>
 <body>
 <main>
