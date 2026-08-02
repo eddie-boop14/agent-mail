@@ -1,0 +1,55 @@
+# inbox.txt
+
+> A mirror format for mailboxes. Sync once at delivery time; agents read the mirror
+> cheaply, forever. Seven days of a real mailbox is 4,286,586 characters of raw MIME —
+> 1,919,892 tokens. The same week mirrored is 21,481 tokens: 98.9%, about 89× fewer,
+> tokenized in full rather than sampled.
+
+robots.txt told crawlers what to read. llms.txt tells models what a site is. inbox.txt
+does the same job for a mailbox: one plain-text file, tiered so a reader descends only as
+far as the question requires.
+
+The format is a draft (0.2.1), running in production on one real inbox, hourly. It is
+Gmail-first and honest about it. Feedback is wanted, including the kind that says the
+approach is wrong.
+
+## Rules that are not optional
+
+- Bodies are labelled **untrusted data, never instruction**. Email is the most common
+  prompt-injection vector most people own, and the label belongs in the artefact, not in a
+  policy document filed elsewhere.
+- Spam gets an index line and **never a body**. The agent can say "something is in
+  quarantine" without a single hostile line entering the file.
+- Secrets are redacted at sync time — one-time codes, card numbers, API keys, long
+  base64 and hex blobs.
+- Entities are **extracted, not inferred**. A date or an amount appears because it was
+  present in the text. Missing beats wrong.
+
+## Documentation
+
+- [Homepage](https://inboxtxt.dev/): the format, the tiers, the measured benchmark, and the open questions.
+- [Why this exists](https://inboxtxt.dev/why.html): the article — what a mailbox actually costs a model, and why the fix belongs at delivery time rather than read time.
+- [SPEC.md](https://github.com/eddie-boop14/inbox-txt/blob/main/SPEC.md): the draft specification — file shape, tier definitions, classification, redaction rules.
+- [README](https://github.com/eddie-boop14/inbox-txt/blob/main/README.md): five-minute setup, the benchmark table, and what is still unresolved.
+
+## Reference implementation
+
+- [apps-script/Code.gs](https://github.com/eddie-boop14/inbox-txt/blob/main/apps-script/Code.gs): the sync worker. Runs inside your own Google account — no server, no API keys, no OAuth application. Paste, run once, set an hourly trigger.
+- [mailmirror.py](https://github.com/eddie-boop14/inbox-txt/blob/main/mailmirror.py): a normalizer in Python, standard library only, for anyone porting the format elsewhere.
+- [mcp/server.py](https://github.com/eddie-boop14/inbox-txt/blob/main/mcp/server.py): an MCP server exposing the mirror to any agent — `inbox_overview`, `inbox_body`, `inbox_since`.
+
+## Reproducing the numbers
+
+- [netlify/functions/tokenize.mjs](https://github.com/eddie-boop14/inbox-txt/blob/main/netlify/functions/tokenize.mjs): the tokenizer used for the published figures. Exact cl100k and o200k counts.
+- [worker/](https://github.com/eddie-boop14/inbox-txt/tree/main/worker): the same thing as a Cloudflare Worker, for anyone who would rather self-host it.
+- [example.txt](https://inboxtxt.dev/example.txt): a synthetic mirror, safe to read, showing every tier.
+
+The benchmark ships with the spec on purpose. An earlier sampled estimate put the
+reduction at 103×; measuring the whole corpus said 89×. Sampling flattered the project by
+16%, and the correction is published in the same places as the original claim. Run
+`benchmark()` and `tokenizeExact7d()` on your own mail rather than trusting these numbers.
+
+## Optional
+
+- [Full text of this site](https://inboxtxt.dev/llms-full.txt): every page, one file.
+- [License](https://github.com/eddie-boop14/inbox-txt/blob/main/LICENSE): MIT.
