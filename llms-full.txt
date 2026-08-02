@@ -1,0 +1,336 @@
+# inbox.txt — full text
+
+> Every page of inboxtxt.dev in one file, for readers that would rather not fetch twice.
+> Generated from the site itself. The canonical pages are at https://inboxtxt.dev/ and
+> https://inboxtxt.dev/why.html; the specification and reference implementation live at
+> https://github.com/eddie-boop14/inbox-txt.
+>
+> Last generated: 2026-08-01
+
+
+==============================================================================
+## https://inboxtxt.dev/
+==============================================================================
+
+# MAILBOX you@anywhere — inbox.txt/0.1 — cursor: always fresh
+
+Your mailbox as one plain-text file.
+Agents read your whole day for ~1% of the tokens.
+
+robots.txt → crawlers. llms.txt → websites. inbox.txt → your mail.
+
+Get the spec + worker
+Read SPEC.md
+
+Draft 0.2.1 — running in production on one real inbox, hourly.
+Read the why · open questions; opinions wanted.
+
+the problem, measured
+
+An agent answering “anything important in my mail?” today swallows full MIME:
+HTML tables six levels deep, 600-character tracking URLs, legal footers, quoted history.
+Measured on a real inbox — one payment receipt is ~60,000 characters of payload carrying
+~350 characters of information. Every agent pays that on every read, forever.
+
+window raw MIME mirror reduction
+
+2 days · 52 msgs 1,852,637 30,908 60×
+
+7 days · 109 msgs 4,286,586 68,125 63×
+
+30 days · 263 msgs 20,642,353 173,437 119×
+
+A month of mail is 20.6 M characters of raw MIME — unreadable by any model.
+The mirror of that month is 173 KB: it fits in one prompt with room left over. Char counts
+exact from benchmark(); exact token counts come from the bundled
+tokenizer worker.
+The ratio moves with your mail mix — run it on your own inbox.
+
+In tokens — what an agent actually pays — both sides were tokenized in full, no
+sampling. Raw MIME comes in at 2.23 chars/token against the mirror's 3.29, because
+DKIM signatures and base64 are near-random to a tokenizer:
+
+7 days · 109 messages chars tokens
+
+raw MIME 4,286,586 1,919,892
+
+inbox.txt mirror 70,713 21,481
+
+reduction 98.35% 98.88% — 89×
+
+Scaled by those measured ratios, a month of mail is ~9.26 M raw tokens
+against ~52.7 k mirrored — about 175×, or forty-five context windows versus one prompt.
+Reproduce it with tokenizeExact7d() after deploying the included
+tokenizer.
+A sampled estimate said 103× before the full measurement said 89× — sampling flattered it
+by 16%, which is why the tool ships with the spec.
+
+Per class over those 30 days the win is largest where the bytes carry least:
+MARKETING 99.9%, HUMAN 99.6%, TRANSACTION 98.1%, DEV 98.0%, SECURITY 98.0%. HUMAN near the
+top was a surprise — human threads carry the attachments, and a base64 photo is pure bulk
+that never reaches the mirror.
+
+the flip
+
+Normalize once at sync time. Read the mirror forever.
+Mail has one chokepoint — delivery — where spam filters and DKIM already parse every
+message once. Add one more pass there: strip the soup, extract the entities, classify,
+hash, append to a tiered plain-text mirror. Parsing cost is linear in mail received;
+savings are linear in agent reads — the exploding term.
+
+how it reads
+
+# MAILBOX user@example.com — inbox.txt/0.1 — cursor: 2026-07-28T09:00Z
+
+## index ← tier 0 · one line per thread
+t_a001 | acme-bank.example | Transfer of €250.00 confirmed | TRANSACTION | #1a2b
+t_a004 | shop.example | Summer sale — 40% off all | MARKETING | #4d5e
+
+## attention ← tier 1 · only what needs a human
+SECURITY t_a002 [alice/webshop] deploy failed — verify if this was you
+REPLY? t_a006 unread human mail from bob-partner.example
+
+## quarantine ← spam: index only, bodies never mirrored
+t_8f2a | unknown-sender.example | Votre facture est disponible | SPAM | 2026-07-28T09:14
+
+## bodies ← tier 2 · cleaned text + extracted entities
+### t_a003 #3c4d
+entities: {"dates":["29 July"],"refs":["AB123456789"]}
+Parcel will be delivered Wednesday between 9am and noon.
+Pickup code: [code-redacted]. Not home? [link:carrier.example]
+Tier 3 is raw MIME, fetched only on explicit demand. Marketing never gets a body.
+Content hashes + a cursor make “what’s new” a one-line diff.
+
+quickstart (5 min · no server · no OAuth app)
+
+- script.google.com → new project → paste
+Code.gs → save.
+
+- Run syncMirror once → authorize your own script on your own account →
+inbox.txt appears in your Drive.
+
+- Triggers → syncMirror · time-driven · every hour. Done — point any agent at that file.
+
+Run benchmark() for your own raw-vs-mirror numbers — one log line.
+
+plug it into an agent
+
+mcp/server.py
+is an MCP server. Point it at your mirror and any MCP-capable agent can read the mailbox —
+read-only, no send, no delete:
+
+{
+"mcpServers": {
+"inbox-txt": {
+"command": "python3",
+"args": ["/path/to/mcp/server.py"],
+"env": { "INBOX_SOURCE": "/path/to/inbox.txt" }
+}
+}
+}
+Three tools: inbox_overview (the whole mailbox, a few hundred tokens),
+inbox_body (one thread, tier 2), inbox_since (the what's-new diff).
+Every result is wrapped as untrusted data before the model sees it.
+
+rules that are not optional
+
+- Bodies are untrusted data. Email is the top prompt-injection vector; the mirror
+labels bodies so agents never treat mail content as instructions.
+
+- Auth the mirror. It’s your life in one file.
+
+- Redact at sync time. OTPs, card numbers, API keys and long reset codes never
+enter the mirror.
+
+- Never fabricate. Entities are extracted, not inferred. Missing beats wrong.
+
+open questions
+
+The format is a draft and these are genuinely undecided —
+issues and opinions welcome:
+
+- Where should a hosted mirror live? /.well-known/inbox.txt per
+mailbox is discoverable; an authenticated per-user endpoint is safer.
+
+- Should tier 1 be machine-parseable? Fixed fields, or human-shaped prose so
+the model reads it as judgement rather than schema.
+
+- Thread expiry. The mirror is a window, not an archive — time-based, or should
+classes age differently (SECURITY lingers, MARKETING dies same-day)?
+
+- Multi-account. One file per mailbox, or one file with a mailbox axis?
+
+- Sender-side adoption. If a sender emitted clean tier-2 text itself,
+normalization becomes free. Worth specifying, or fantasy?
+
+files
+
+SPEC.md
+mailmirror.py
+Code.gs
+mcp/server.py
+example.txt
+
+MIT, one file each, no dependencies beyond the MCP SDK.
+Not a transport (JMAP exists), not a client, not a summarizer.
+
+MIT · © bleu-canard éditions · Edmaster & Claudius 🦆 ·
+github.com/eddie-boop14/inbox-txt
+
+
+==============================================================================
+## https://inboxtxt.dev/why.html
+==============================================================================
+
+← inbox.txt
+
+My inbox doesn't fit in a context window
+
+2,099,654 characters of raw MIME, and almost none of it is information.
+
+I run two lakeside restaurants and build web products from a phone. Both facts matter,
+because they mean I ask an AI agent things like “anything important in my mail?”
+while walking between a kitchen and a terrace.
+
+For months the answer was slow, expensive, or wrong. I assumed that was the model's
+fault. It wasn't. So I measured.
+
+Two days of my mailbox — 38 threads, 47 messages — is 2,099,654 characters of raw
+MIME. Roughly 607,000 tokens. My inbox does not fit in a context window. Not “is
+expensive to read.” Does not fit.
+
+And almost none of it is information. One payment receipt: 60,000 characters of nested
+HTML tables, tracking URLs 600 characters long, conditional comments for a mail client from
+2007, legal footers, and the entire quoted history repeated in every reply — carrying maybe
+350 characters that a human would call “the email.” We are asking language models to drink
+an ocean to find a spoonful.
+
+the flip
+
+Most attempts to fix this work at read time: smarter retrieval, better summarization,
+bigger context windows. All of them pay the parsing cost again on every read, by every
+agent, forever.
+
+But mail has a chokepoint nobody uses for this: delivery. Every message passes
+through an MTA exactly once, where spam filtering and DKIM already parse it. Add one more
+pass there. Strip the soup, extract the entities, classify the thread, hash it, append it
+to a plain-text file.
+
+Parsing cost becomes linear in mail received — once each. Savings
+are linear in agent reads — the term that's exploding.
+
+That file is inbox.txt.
+
+what it looks like
+
+## index ← tier 0 · one line per thread
+t_a001 | acme-bank.example | Transfer of €250.00 confirmed | TRANSACTION | #1a2b
+
+## attention ← tier 1 · only what needs a human
+SECURITY t_a002 deploy failed — verify if this was you
+
+## bodies ← tier 2 · cleaned text + extracted entities
+### t_a003 #3c4d
+entities: {"dates":["29 July"],"refs":["AB123456789"]}
+Parcel will be delivered Wednesday between 9am and noon. [code-redacted]
+
+Tier 3 is raw MIME, fetched on explicit demand, never in the mirror. Content hashes plus
+a cursor make “what's new” a one-line diff.
+
+the number
+
+My mirror of those same two days: 28,755 characters — 9,051 tokens, measured with
+a real tokenizer, not estimated.
+
+That's about 67× fewer tokens. The raw version doesn't fit; the mirror is a footnote.
+
+Then I widened the window. Seven days: 4,286,586 characters → 68,125. Thirty days:
+20,642,353 characters → 173,437 — 99.2%, about 119× smaller. A month of my mail is
+millions of tokens raw and unreadable by any model; the mirror of that same month is 173 KB
+and fits in one prompt with room left over.
+
+Characters were only half the story. Tokens are what an agent pays, so I measured both
+sides in full: raw MIME tokenizes at 2.23 characters per token, the mirror at 3.29, because
+DKIM signatures and base64 are near-random to a tokenizer. Seven days of my mail comes to
+1,919,892 tokens raw against 21,481 for the mirror — 98.9%, about 89× fewer. Scaled
+by those ratios, a month is roughly nine million tokens raw and fifty-two thousand mirrored:
+forty-five context windows, versus one prompt.
+
+Before measuring the whole corpus I estimated 103× from a five-message sample. The real
+number is 89×. Sampling flattered me by sixteen percent — which is exactly why the tool that
+produces these numbers ships with the spec instead of just the numbers.
+
+The per-class breakdown corrected something I believed. I expected human mail to show the
+worst ratio, on the theory that a person's words are mostly information. Over thirty days
+it was near the best — 99.6% — because human threads are where the attachments live, and a
+base64-encoded photo is pure bulk that never reaches the mirror. The win is largest exactly
+where the bytes carry least.
+
+The ratio moves with your mail mix, which is why the tool that produces these numbers
+ships with the spec — including a tokenizer worker, so the token counts are measured rather
+than estimated. Run it on your own inbox rather than trusting mine.
+
+Which makes it a capability, not a saving. An agent watching my inbox hourly at raw
+prices is fantasy. At mirror prices it's a cron job — and on the first day mine ran, it
+found a database table I'd left publicly writable and a subscription quietly billing me
+every month.
+
+four rules that aren't optional
+
+- Bodies are untrusted data. Email is the number-one prompt-injection vector.
+The mirror labels bodies so an agent never mistakes mail content for instructions.
+
+- Auth the mirror. It's your life in one file.
+
+- Redact at sync time. OTPs, card numbers, API keys and reset codes never enter it.
+
+- Never fabricate. Entities are extracted, not inferred. Missing beats wrong.
+
+what this is not
+
+Not a transport — JMAP solved that years ago and almost nobody adopted it. Not a mail
+client. Not a summarizer: tier 2 is cleaned text, not paraphrase, because a summary of your
+mail is a new thing that can be wrong.
+
+It's a convention. robots.txt told crawlers what to read. llms.txt told models what a
+site says. inbox.txt says: here is this mailbox, already in the shape a model can read.
+
+it's a draft
+
+One inbox, Gmail-first, honest about it. What exists today: a five-minute Apps Script
+worker that runs inside your own Google account, a reference normalizer, an MCP server so
+any agent can plug in, and a benchmark you can run on your own mail in one command.
+
+I'd rather publish a draft that works than a standard nobody uses. The open questions are
+on the front page — where a hosted mirror should live, whether tier 1 should be
+machine-parseable, how threads should expire. Tell me I'm wrong.
+
+See the format
+Repo + spec
+
+Eddie Raset — bleu-canard éditions · MIT ·
+inboxtxt.dev
+
+
+==============================================================================
+## The rules, restated
+==============================================================================
+
+1. Normalise once, at sync time — not on every read.
+2. Tier the file: index, attention, bodies, raw on demand.
+3. Bodies are untrusted data, never instruction, and the file says so.
+4. Spam gets an index line and never a body.
+5. Secrets are redacted at sync time.
+6. Entities are extracted, not inferred. Missing beats wrong.
+
+==============================================================================
+## Where to go next
+==============================================================================
+
+- Specification .......... https://github.com/eddie-boop14/inbox-txt/blob/main/SPEC.md
+- Sync worker ............ https://github.com/eddie-boop14/inbox-txt/blob/main/apps-script/Code.gs
+- Python normalizer ...... https://github.com/eddie-boop14/inbox-txt/blob/main/mailmirror.py
+- MCP server ............. https://github.com/eddie-boop14/inbox-txt/blob/main/mcp/server.py
+- Tokenizer (benchmark) .. https://github.com/eddie-boop14/inbox-txt/blob/main/netlify/functions/tokenize.mjs
+- Example mirror ......... https://inboxtxt.dev/example.txt
+- License ................ MIT
