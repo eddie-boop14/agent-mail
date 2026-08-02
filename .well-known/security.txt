@@ -1,0 +1,18 @@
+# inbox.txt — security contact
+# Format: RFC 9116 (https://www.rfc-editor.org/rfc/rfc9116)
+
+Contact: https://github.com/eddie-boop14/inbox-txt/security/advisories/new
+Contact: https://github.com/eddie-boop14/inbox-txt/issues
+Expires: 2027-08-01T00:00:00.000Z
+Preferred-Languages: en, fr
+Canonical: https://inboxtxt.dev/.well-known/security.txt
+Policy: https://github.com/eddie-boop14/inbox-txt/blob/main/SPEC.md
+
+# Scope
+# This site is static and holds no user data. The interesting surface is the FORMAT:
+# a mirror of a mailbox is a file an agent will read, which makes it a prompt-injection
+# surface by construction. Reports that the untrusted-content rules are insufficient are
+# as welcome as reports about this website — arguably more so.
+#
+# The reference sync worker runs inside the operator's own Google account and sends
+# nothing outward unless they configure an endpoint themselves.
