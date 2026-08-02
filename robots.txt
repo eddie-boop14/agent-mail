@@ -1,0 +1,7 @@
+# inbox.txt — a plain-text mailbox mirror format.
+# Spec, reference implementation and benchmark: https://github.com/eddie-boop14/inbox-txt
+
+User-agent: *
+Allow: /
+
+Sitemap: https://inboxtxt.dev/sitemap.xml
