@@ -1,0 +1,16 @@
+{
+  "name": "inbox.txt — a mirror format for mailboxes",
+  "short_name": "inbox.txt",
+  "description": "Sync once at delivery time; agents read the mirror cheaply, forever.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "browser",
+  "background_color": "#0f1210",
+  "theme_color": "#0f1210",
+  "icons": [
+    { "src": "/favicon.svg",           "sizes": "any",     "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icon-192.png",          "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png",          "sizes": "512x512", "type": "image/png" },
+    { "src": "/apple-touch-icon.png",  "sizes": "180x180", "type": "image/png" }
+  ]
+}
