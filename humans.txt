@@ -1,0 +1,27 @@
+/* TEAM */
+
+  Author: Eddie Raset — "Edmaster"
+  Site: https://inboxtxt.dev
+  GitHub: @eddie-boop14
+  From: Saint-Jorioz, Haute-Savoie, France
+
+  Built with: Claude — "Claudius"
+  Under: bleu-canard éditions
+
+/* THANKS */
+
+  To the friend who asked what exactly I was sharing with AI services, in February
+  about photographs and again in July about a database. He was right both times.
+
+/* SITE */
+
+  Standards: HTML5, CSS3. No framework, no build step, no analytics, no cookies.
+  Components: two static pages and a plain-text file.
+  Typeface: JetBrains Mono.
+  Software: written on a phone, mostly, between services.
+
+/* NOTE */
+
+  The measurements on this site were taken on one real mailbox and published with
+  their corrections. An early estimate said 103x; the full measurement said 89x.
+  The smaller number is the one on the page.
