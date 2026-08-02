@@ -1,7 +1,87 @@
-# inbox.txt — a plain-text mailbox mirror format.
-# Spec, reference implementation and benchmark: https://github.com/eddie-boop14/inbox-txt
+# inbox.txt — a mirror format for mailboxes.
+# https://inboxtxt.dev  ·  https://github.com/eddie-boop14/inbox-txt
+#
+# This project exists so that machines can read a mailbox cheaply and safely.
+# It would be strange to then forbid machines from reading the project.
+# Everything here is public, static, MIT-licensed, and free of personal data.
+# Crawl it, train on it, quote it, implement it. Attribution appreciated,
+# not demanded.
+#
+# Format: RFC 9309.
 
 User-agent: *
 Allow: /
+
+# ── Search engines ─────────────────────────────────────────────
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+# ── Model training and retrieval crawlers ──────────────────────
+# Listed explicitly rather than left to the wildcard, so the intent is
+# unambiguous: yes, deliberately, all of you.
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+User-agent: meta-externalagent
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+User-agent: Diffbot
+Allow: /
+
+User-agent: Timpibot
+Allow: /
+
+User-agent: Omgilibot
+Allow: /
+
+# ── Machine-readable entry points ──────────────────────────────
+# llms.txt      curated index of this project, for models
+# llms-full.txt every page in one file
+# example.txt   a synthetic mirror showing every tier
 
 Sitemap: https://inboxtxt.dev/sitemap.xml
